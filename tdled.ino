@@ -8,7 +8,8 @@ CRGB palette[64];
 CRGB leds[NUM_LEDS];
 int nled = 0;
 
-char code[256] = "?p9 p?p8 p2?p7 p3?p6 p4?p5 p5?p4 p6?p3 p7?p2 p8?p p9? ";
+#define NUM_CODE 256
+char code[NUM_CODE] = "?p9 p?p8 p2?p7 p3?p6 p4?p5 p5?p4 p6?p3 p7?p2 p8?p p9? ";
 int pc = 0;
 int pcstart = 0;
 
@@ -22,17 +23,20 @@ void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   pal64();
   Serial.begin(9600);
+  Serial.setTimeout(100);
 }
 
 void loop() {
   nled = 0;
   pc = pcstart;
 
-  while (code[pc]) {
+  while (pc < NUM_CODE && code[pc]) {
+    if (Serial.available()) { readcode(); return; }
     int c = code[pc];
     switch (c) {
       case ' ':
       case '\n':
+        if (nled == 0) { pc++; continue; }
         for (int j = nled; j < NUM_LEDS; j++) {
           leds[j] = leds[j - nled];
         }
@@ -59,6 +63,7 @@ void loop() {
   }
 }
 
+
 int scanint(int sc) {
   int val = 0;
   while (isdigit(code[sc])) {
@@ -81,5 +86,15 @@ void pal64() {
       }
     }
   }
+}
+
+
+void readcode() {
+  // read a new code string from the serial port
+  int n = Serial.readBytes(code, NUM_CODE-1);
+  code[n] = 0; 
+  pc = 0;
+  pcstart = 0;
+  while (Serial.available()) { Serial.read(); }
 }
 
