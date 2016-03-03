@@ -44,7 +44,7 @@ Other notable entries in the default palette:
      j     AA  AA  AA      White 66%
      p     FF  00  00      Red 100%
      s     FF  00  FF      Magenta 100%
-     {     FF  FF  00      Yellow 100%
+     |     FF  FF  00      Yellow 100%
      ?     FF  FF  FF      White 100%
 ```
 
