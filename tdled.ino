@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 64
+#define NUM_LEDS 250
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -37,6 +37,7 @@ void loop() {
     switch (c) {
       case ':':
         pc++;
+        coloncmd();
         break;
       case ' ':
       case '\n':
@@ -104,7 +105,7 @@ void readcode() {
 }
 
 
-void colonCmd() {
+void coloncmd() {
   int c = code[pc];
   switch (c) {
     case 'd':
