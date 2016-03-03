@@ -2,4 +2,4 @@
 
 stty -F /dev/ttyACM0 cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
 
-echo "?p9 p?p8 p2?p7 p3?p6 p4?p5      p5?p4 p6?p3 p7?p2 p8?p p9?" >/dev/ttyACM0
+echo "?P9 P?P8 P2?P7 P3?P6 P4?P5      P5?P4 P6?P3 P7?P2 P8?P P9?" >/dev/ttyACM0
