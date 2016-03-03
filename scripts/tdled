@@ -26,5 +26,5 @@ case "$1" in
     exit 1;;
 esac
 
-echo $LEDSCRIPT
-echo $LEDSCRIPT >$ARDUINO
+echo "$2$LEDSCRIPT"
+echo "$2$LEDSCRIPT" >$ARDUINO
