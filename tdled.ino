@@ -1,52 +1,72 @@
 #include "FastLED.h"
+#include <ctype.h>
 
 #define NUM_LEDS 250
 #define DATA_PIN 4
 
-CRGB leds[NUM_LEDS];
 CRGB palette[64];
+CRGB leds[NUM_LEDS];
+int nled = 0;
 
-void setup() {
-    delay(2000);
-    FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-    pal64();
-    Serial.begin(9600);
-}
-
+char code[256] = "?p9 p?p8 p2?p7 p3?p6 p4?p5 p5?p4 p6?p3 p7?p2 p8?p p9? ";
+int pc = 0;
+int pcstart = 0;
 
 // char code[] = "P>\nD>\nA>\n";
-char code[] = "?ppppppppp> p?pppppppp> pp?ppppppp> ppp?pppppp> pppp?ppppp> ppppp?pppp> pppppp?ppp> ppppppp?pp> pppppppp?p> ppppppppp?> ";
 //  char code[] = "UPPPPPPPPP>\nPUPPPPPPPP>\nPPUPPPPPPP>\nPPPUPPPPPP>\nPPPPUPPPPP>\nPPPPPUPPPP>\nPPPPPPUPPP>\nPPPPPPPUPP>\nPPPPPPPPUP>\nPPPPPPPPPU>\n";
 //  char code[] = "A>\nA>\nA>\nB>\nB>\nB>\nC>\nC>\nC>\nB>\nB>\nB>\n";
 
 
+void setup() {
+  delay(2000);
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  pal64();
+  Serial.begin(9600);
+}
+
 void loop() {
-  int n = 0;
-  int j;
-  Serial.println("Hello world\n");
-  while (Serial.available()) {
-    int c = Serial.read();
-    if (c >= '?') code[0] = c;
-  }
-  for(int i = 0; code[i]; i++) {
-    switch (code[i]) {
-      case '>':
-        for (j=n; j<NUM_LEDS; j++) leds[j] = leds[j-n];
-        n = j;
-        break;
-      case '\n':
+  nled = 0;
+  pc = pcstart;
+
+  while (code[pc]) {
+    int c = code[pc];
+    switch (c) {
       case ' ':
+      case '\n':
+        for (int j = nled; j < NUM_LEDS; j++) {
+          leds[j] = leds[j - nled];
+        }
+        nled = NUM_LEDS;
+      case ';':
         FastLED.show();
         delay(10);
-        n = 0;
+        nled = 0;
+        pc++;
         break;
       default:
-        if (code[i] >= 0x3f && code[i] <= 0x7f) 
-          leds[n++] = palette[code[i] & 0x3f];
+        if (c >= 0x3f && c <= 0x7f) {
+          CRGB color = palette[c & 0x3f];
+          int n = 1;
+          pc++;
+          if (isdigit(code[pc])) n = scanint(pc);
+          while (n > 0 && nled < NUM_LEDS) {
+            leds[nled++] = color;
+            n--;
+          }
+        }
         break;
     }
   }
-  FastLED.show();
+}
+
+int scanint(int sc) {
+  int val = 0;
+  while (isdigit(code[sc])) {
+    val = val * 10 + (code[sc] - '0');
+    sc++;
+  }
+  pc = sc;
+  return val;
 }
 
 
