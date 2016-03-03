@@ -1,0 +1,30 @@
+#!/bin/sh
+
+ARDUINO=/dev/ttyACM0
+LEDSCRIPT=""
+
+stty -F $ARDUINO cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
+
+case "$1" in
+  blk|black)  LEDSCRIPT='@';;
+  red1)       LEDSCRIPT='P';;
+  red3)       LEDSCRIPT='p';;
+  grn1)       LEDSCRIPT='D';;
+  grn3)       LEDSCRIPT='L';;
+  blu1)       LEDSCRIPT='A';;
+  blu3)       LEDSCRIPT='C';;
+  whi1)       LEDSCRIPT='U';;
+  whi3)       LEDSCRIPT='?';;
+  yel1)       LEDSCRIPT='T';;
+  yel3)       LEDSCRIPT='|';;
+  palette)    LEDSCRIPT='@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?';;
+
+  red1wchase) LEDSCRIPT='?P9 P?P8 P2?P7 P3?P6 P4?P5 P5?P4 P6?P3 P7?P2 P8?P P9?';;
+
+  *)
+    echo "'$1' not recognized"
+    exit 1;;
+esac
+
+echo $LEDSCRIPT
+echo $LEDSCRIPT >$ARDUINO
