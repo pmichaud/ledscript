@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 250
+#define NUM_LEDS 64
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -12,6 +12,7 @@ int nled = 0;
 char code[NUM_CODE] = "?p9 p?p8 p2?p7 p3?p6 p4?p5 p5?p4 p6?p3 p7?p2 p8?p p9? ";
 int pc = 0;
 int pcstart = 0;
+int framedelay = 50; 
 
 // char code[] = "P>\nD>\nA>\n";
 //  char code[] = "UPPPPPPPPP>\nPUPPPPPPPP>\nPPUPPPPPPP>\nPPPUPPPPPP>\nPPPPUPPPPP>\nPPPPPUPPPP>\nPPPPPPUPPP>\nPPPPPPPUPP>\nPPPPPPPPUP>\nPPPPPPPPPU>\n";
@@ -34,6 +35,9 @@ void loop() {
     if (Serial.available()) { readcode(); return; }
     int c = code[pc];
     switch (c) {
+      case ':':
+        pc++;
+        break;
       case ' ':
       case '\n':
         if (nled == 0) { pc++; continue; }
@@ -43,7 +47,7 @@ void loop() {
         nled = NUM_LEDS;
       case ';':
         FastLED.show();
-        delay(10);
+        delay(framedelay);
         nled = 0;
         pc++;
         break;
@@ -95,6 +99,17 @@ void readcode() {
   code[n] = 0; 
   pc = 0;
   pcstart = 0;
+  framedelay = 100;
   while (Serial.available()) { Serial.read(); }
+}
+
+
+void colonCmd() {
+  int c = code[pc];
+  switch (c) {
+    case 'd':
+      framedelay = scanint(pc+1);
+      break;
+  }
 }
 
