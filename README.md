@@ -1,4 +1,5 @@
 TDled is a sketch to allow dynamic control of WS2812B LED arrays.  
+
 The sketch reads LED scripts from the serial port and stores 
 them in the code[] array.  Each character of the script represents
 either a LED pixel value or some command to be performed.
@@ -13,6 +14,7 @@ The default palette is initialized with colors having 4 levels of
 red (off/low/med/full), 4 levels of blue, and 4 levels of green.
 Thus the first 32 entries of the default palette are:
 
+```
    ASCII   R   G   B       Color           ASCII   R   G   B       Color
      @     00  00  00      Black             P     55  00  00      Red 33%
      A     00  00  55      Blue 33%          Q     55  00  55      Magenta 33%
@@ -30,9 +32,11 @@ Thus the first 32 entries of the default palette are:
      M     00  FF  55                        ]     55  FF  55
      N     00  FF  AA                        ^     55  FF  AA
      O     00  FF  FF      Cyan 100%         _     55  FF  FF
+```
 
 Other notable entries in the default palette:
 
+```
    ASCII   R   G   B       Color           
      `     AA  00  00      Red 66%
      b     AA  00  AA      Magenta 66%
@@ -42,6 +46,7 @@ Other notable entries in the default palette:
      s     FF  00  FF      Magenta 100%
      {     FF  FF  00      Yellow 100%
      ?     FF  FF  FF      White 100%
+```
 
 Thus one can specify the pixels of the LED strip by simply stringing together
 a sequence of pixel colors:
