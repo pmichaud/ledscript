@@ -7,16 +7,13 @@
 CRGB palette[64];
 CRGB leds[NUM_LEDS];
 int nled = 0;
+int nfill = 0;
 
 #define NUM_CODE 256
-char code[NUM_CODE] = "?p9 p?p8 p2?p7 p3?p6 p4?p5 p5?p4 p6?p3 p7?p2 p8?p p9? ";
+char code[NUM_CODE] = "?p9 !< ";
 int pc = 0;
 int pcstart = 0;
-int framedelay = 50; 
-
-// char code[] = "P>\nD>\nA>\n";
-//  char code[] = "UPPPPPPPPP>\nPUPPPPPPPP>\nPPUPPPPPPP>\nPPPUPPPPPP>\nPPPPUPPPPP>\nPPPPPUPPPP>\nPPPPPPUPPP>\nPPPPPPPUPP>\nPPPPPPPPUP>\nPPPPPPPPPU>\n";
-//  char code[] = "A>\nA>\nA>\nB>\nB>\nB>\nC>\nC>\nC>\nB>\nB>\nB>\n";
+int framedelay = 50;
 
 
 void setup() {
@@ -32,18 +29,51 @@ void loop() {
   pc = pcstart;
 
   while (pc < NUM_CODE && code[pc]) {
-    if (Serial.available()) { readcode(); return; }
+    if (Serial.available()) {
+      readcode();
+      return;
+    }
     int c = code[pc];
     switch (c) {
+      case '!':
+        pc++;
+        pcstart = pc;
+        break;
       case ':':
         pc++;
         coloncmd();
         break;
+      case '<': 
+        {
+          int n = nfill;
+          if (nled + n > NUM_LEDS) n = NUM_LEDS - nled;
+          CRGB t = leds[nled];
+          for (int i = 0; i < n - 1; i++) leds[nled+i] = leds[nled+i+1];
+          leds[nled+n-1] = t;
+          nled += n;
+          pc++;
+        }
+        break;
+      case '>':
+        {
+          int n = nfill;
+          if (nled + n > NUM_LEDS) n = NUM_LEDS - nled;
+          CRGB t = leds[nled + n - 1];
+          for (int i = n-1; i > 0; i--) leds[nled+i] = leds[nled+i-1];
+          leds[nled] = t;
+          nled += n;
+          pc++;
+        }
+        break;
       case ' ':
       case '\n':
-        if (nled == 0) { pc++; continue; }
-        for (int j = nled; j < NUM_LEDS; j++) {
-          leds[j] = leds[j - nled];
+        if (nled == 0) {
+          pc++;
+          continue;
+        }
+        nfill = nled;
+        for (int j = nfill; j < NUM_LEDS; j++) {
+          leds[j] = leds[j - nfill];
         }
         nled = NUM_LEDS;
       case ';':
@@ -96,12 +126,14 @@ void pal64() {
 
 void readcode() {
   // read a new code string from the serial port
-  int n = Serial.readBytes(code, NUM_CODE-1);
-  code[n] = 0; 
+  int n = Serial.readBytes(code, NUM_CODE - 1);
+  code[n] = 0;
   pc = 0;
   pcstart = 0;
   framedelay = 100;
-  while (Serial.available()) { Serial.read(); }
+  while (Serial.available()) {
+    Serial.read();
+  }
 }
 
 
@@ -109,7 +141,7 @@ void coloncmd() {
   int c = code[pc];
   switch (c) {
     case 'd':
-      framedelay = scanint(pc+1);
+      framedelay = scanint(pc + 1);
       break;
   }
 }
