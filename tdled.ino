@@ -29,10 +29,6 @@ void loop() {
   pc = pcstart;
 
   while (pc < NUM_CODE && code[pc]) {
-    if (Serial.available()) {
-      readcode();
-      return;
-    }
     int c = code[pc];
     switch (c) {
       case '!':
@@ -81,6 +77,10 @@ void loop() {
         delay(framedelay);
         nled = 0;
         pc++;
+        if (Serial.available()) {
+          readcode();
+          return;
+        }
         break;
       default:
         if (c >= 0x3f && c <= 0x7f) {
