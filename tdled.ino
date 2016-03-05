@@ -6,7 +6,7 @@
 
 CRGB palette[64];
 CRGB leds[NUM_LEDS];
-int nled = 0;
+int nleds = 0;
 int nfill = 0;
 
 #define NUM_CODE 256
@@ -25,7 +25,7 @@ void setup() {
 }
 
 void loop() {
-  nled = 0;
+  nleds = 0;
   pc = pcstart;
 
   while (pc < NUM_CODE && code[pc]) {
@@ -42,40 +42,40 @@ void loop() {
       case '<': 
         {
           int n = nfill;
-          if (nled + n > NUM_LEDS) n = NUM_LEDS - nled;
-          CRGB t = leds[nled];
-          for (int i = 0; i < n - 1; i++) leds[nled+i] = leds[nled+i+1];
-          leds[nled+n-1] = t;
-          nled += n;
+          if (nleds + n > NUM_LEDS) n = NUM_LEDS - nleds;
+          CRGB t = leds[nleds];
+          for (int i = 0; i < n - 1; i++) leds[nleds+i] = leds[nleds+i+1];
+          leds[nleds+n-1] = t;
+          nleds += n;
           pc++;
         }
         break;
       case '>':
         {
           int n = nfill;
-          if (nled + n > NUM_LEDS) n = NUM_LEDS - nled;
-          CRGB t = leds[nled + n - 1];
-          for (int i = n-1; i > 0; i--) leds[nled+i] = leds[nled+i-1];
-          leds[nled] = t;
-          nled += n;
+          if (nleds + n > NUM_LEDS) n = NUM_LEDS - nleds;
+          CRGB t = leds[nleds + n - 1];
+          for (int i = n-1; i > 0; i--) leds[nleds+i] = leds[nleds+i-1];
+          leds[nleds] = t;
+          nleds += n;
           pc++;
         }
         break;
       case ' ':
       case '\n':
-        if (nled == 0) {
+        if (nleds == 0) {
           pc++;
           continue;
         }
-        nfill = nled;
+        nfill = nleds;
         for (int j = nfill; j < NUM_LEDS; j++) {
           leds[j] = leds[j - nfill];
         }
-        nled = NUM_LEDS;
+        nleds = NUM_LEDS;
       case ';':
         FastLED.show();
         delay(framedelay);
-        nled = 0;
+        nleds = 0;
         pc++;
         if (Serial.available()) {
           readcode();
@@ -86,8 +86,8 @@ void loop() {
         if (c >= 0x3f && c <= 0x7f) {
           CRGB color = palette[c & 0x3f];
           int n = scanint(pc+1, 1);
-          while (n > 0 && nled < NUM_LEDS) {
-            leds[nled++] = color;
+          while (n > 0 && nleds < NUM_LEDS) {
+            leds[nleds++] = color;
             n--;
           }
         }
