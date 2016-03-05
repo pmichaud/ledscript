@@ -86,5 +86,16 @@ strip can be quickly changed from the command line:
 
 A few example scripts are given in the scripts/ directory.
 
-Other command characters will likely be added to change the frame rate
-and perform other advanced LED sequences.
+Other character commands are available:
+
+  / <n> <color> - ramp to color
+    This command ramps <n> pixels from the color of the last pixel set to
+    the target <color>.  Thus the sequence "@/15p" draws a black pixel (@)
+    then sets the next 15 pixels to ramp from black to full red (P).
+    The sequence can be chained, so a typical rainbow pattern might be
+        P/8T/8D/8E/8A/8Q/7P   - red->yellow->green->cyan->blue->magenta->red
+
+    (Speculation:  the '//' command might draw only to the (n-1)th pixel
+     of the ramp, to allow seamless circular chains.)
+
+

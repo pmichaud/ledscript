@@ -39,6 +39,7 @@ void loop() {
         pc++;
         coloncmd();
         break;
+      case '/': rampTo(leds[nleds-1]); break;
       case '<': 
         {
           int n = nfill;
@@ -96,6 +97,17 @@ void loop() {
   }
 }
 
+
+void rampTo(CRGB from) {
+  int n = scanint(pc+1, 1);
+  CRGB to = (code[pc]) ? palette[code[pc++] & 0x3f] : CRGB::Black;
+  int r0 = from.r;  int rd = to.r - r0;
+  int g0 = from.g;  int gd = to.g - g0;
+  int b0 = from.b;  int bd = to.b - b0;
+  for (int i = 1; i <= n && nleds < NUM_LEDS; i++) {
+    leds[nleds++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
+  }
+}
 
 int scanint(int sc, int val) {
   if (isdigit(code[sc])) {
