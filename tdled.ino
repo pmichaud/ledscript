@@ -85,9 +85,7 @@ void loop() {
       default:
         if (c >= 0x3f && c <= 0x7f) {
           CRGB color = palette[c & 0x3f];
-          int n = 1;
-          pc++;
-          if (isdigit(code[pc])) n = scanint(pc);
+          int n = scanint(pc+1, 1);
           while (n > 0 && nled < NUM_LEDS) {
             leds[nled++] = color;
             n--;
@@ -99,11 +97,13 @@ void loop() {
 }
 
 
-int scanint(int sc) {
-  int val = 0;
-  while (isdigit(code[sc])) {
-    val = val * 10 + (code[sc] - '0');
-    sc++;
+int scanint(int sc, int val) {
+  if (isdigit(code[sc])) {
+    val = 0;
+    while (isdigit(code[sc])) {
+      val = val * 10 + (code[sc] - '0');
+      sc++;
+    }
   }
   pc = sc;
   return val;
@@ -141,7 +141,7 @@ void coloncmd() {
   int c = code[pc];
   switch (c) {
     case 'd':
-      framedelay = scanint(pc + 1);
+      framedelay = scanint(pc + 1, 100);
       break;
   }
 }
