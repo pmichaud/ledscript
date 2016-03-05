@@ -93,9 +93,35 @@ Other character commands are available:
     the target <color>.  Thus the sequence "@/15p" draws a black pixel (@)
     then sets the next 15 pixels to ramp from black to full red (P).
     The sequence can be chained, so a typical rainbow pattern might be
-        P/8T/8D/8E/8A/8Q/7P   - red->yellow->green->cyan->blue->magenta->red
+        'P/8T/8D/8E/8A/8Q/7P '   - red->yellow->green->cyan->blue->magenta->red
 
     (Speculation:  the '//' command might draw only to the (n-1)th pixel
      of the ramp, to allow seamless circular chains.)
+
+  < - rotate left
+  > - rotate right
+    This command rotates a sequence of pixels left or right.  The rotation
+    moves all of the pixels in the sequence one unit left or right, feeding
+    the first pixel moved around to the other end.  By default, the number
+    of pixels in the rotation sequence is given by the length of the last
+    fill pattern from a previous ' ' or '\n' frame command.  (Speculation:
+    future versions of this command will take an optional rotation length.)
+
+    Thus a LEDscript like
+         'P9? > > > > > > > > > '
+    creates a frame of ten repeated pixels (9 red and one white), then
+    nine successive frames by rotating the first ten pixels one space to
+    the right and repeating that new sequence.  The net effect is a "chase"
+    pattern.
+
+  ! - restart here
+    This command marks a new "restart point" when the end of a LEDscript is
+    reached; instead of looping back to the beginning of the LEDscript, it
+    loops back to the exclamation point.  It's useful for performing one-time
+    initialization at the start of the LEDscript.
+        'P9? !> '
+    This creates a frame with a repeated pattern of 9 red and one white 
+    pixel, then repeats (forever) frames consisting of rotate right 
+    operations.
 
 
