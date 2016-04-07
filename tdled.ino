@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 250
+#define NUM_LEDS 120
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -10,18 +10,18 @@ int nleds = 0;
 int nfill = 0;
 
 #define NUM_CODE 256
-char code[NUM_CODE] = "?p9 !< ";
+char code[NUM_CODE] = "@P9 !< ";
 int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
 
 
 void setup() {
-  delay(2000);
+  delay(500);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   pal64();
   Serial.begin(9600);
-  Serial.setTimeout(100);
+  Serial.setTimeout(200);
 }
 
 void loop() {
@@ -64,18 +64,15 @@ void loop() {
         break;
       case ' ':
       case '\n':
-        if (nleds == 0) {
-          pc++;
-          continue;
+        if (nleds != 0) {
+          nfill = nleds;
+          for (int j = nfill; j < NUM_LEDS; j++) {
+            leds[j] = leds[j - nfill];
+          }
         }
-        nfill = nleds;
-        for (int j = nfill; j < NUM_LEDS; j++) {
-          leds[j] = leds[j - nfill];
-        }
-        nleds = NUM_LEDS;
       case ';':
         FastLED.show();
-        delay(framedelay);
+        FastLED.delay(framedelay);
         nleds = 0;
         pc++;
         if (Serial.available()) {
@@ -112,7 +109,7 @@ void rampTo(CRGB from) {
 int scanint(int sc, int val) {
   if (isdigit(code[sc])) {
     val = 0;
-    while (isdigit(code[sc])) {
+    while (code[sc] && isdigit(code[sc])) {
       val = val * 10 + (code[sc] - '0');
       sc++;
     }
@@ -146,14 +143,20 @@ void readcode() {
   while (Serial.available()) {
     Serial.read();
   }
+  Serial.print(code);
 }
 
 
 void coloncmd() {
+  int brightness;
   int c = code[pc];
   switch (c) {
     case 'd':
-      framedelay = scanint(pc + 1, 100);
+      framedelay = scanint(pc+1, 100);
+      break;
+    case 'b':
+      brightness = scanint(pc+1, 255);
+      FastLED.setBrightness(brightness);
       break;
   }
 }
