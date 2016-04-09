@@ -20,7 +20,7 @@ void setup() {
   delay(500);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   pal64();
-  Serial.begin(9600);
+  Serial.begin(4800);
   Serial.setTimeout(200);
 }
 
