@@ -9,8 +9,12 @@ CRGB leds[NUM_LEDS];
 int nleds = 0;
 int nfill = 0;
 
+#define NUM_RPAL 64
+char rpal[NUM_RPAL] = "@@@?";
+int nrpal = 4;
+
 #define NUM_CODE 256
-char code[NUM_CODE] = "@P9 !< ";
+char code[NUM_CODE] = "UP9 !< ";
 int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
@@ -35,15 +39,24 @@ void loop() {
       return;
     }
     switch (c) {
-      case '!':
+      case '!':  // set new starting point
         pc++;
         pcstart = pc;
         break;
-      case ':':
+      case ':':  // special colon-based command
         pc++;
         coloncmd();
         break;
-      case '/': rampTo(leds[nleds-1]); break;
+      case '%':  // pick colors from random palette
+        {
+          int n = scanint(pc+1, 1);
+          while (n > 0 && nleds < NUM_LEDS) {
+            leds[nleds++] = palette[rpal[random(nrpal)] & 0x3f];
+            n--;
+          }
+        }
+        break;
+      case '/': if (nleds>0) rampTo(leds[nleds-1]); break;
       case '<': 
         {
           int n = nfill;
@@ -68,19 +81,23 @@ void loop() {
         break;
       case ' ':
       case '\n':
+	// fill and display
         if (nleds != 0) {
           nfill = nleds;
           for (int j = nfill; j < NUM_LEDS; j++) {
             leds[j] = leds[j - nfill];
           }
         }
+        // fall through
       case ';':
+        // display without filling
         FastLED.show();
         delay(framedelay);
         nleds = 0;
         pc++;
         break;
       default:
+        // fill a color
         if (c >= 0x3f && c <= 0x7f) {
           CRGB color = palette[c & 0x3f];
           int n = scanint(pc+1, 1);
@@ -157,6 +174,11 @@ void coloncmd() {
     case 'b':
       brightness = scanint(pc+1, 255);
       FastLED.setBrightness(brightness);
+      break;
+    case '%':
+      nrpal = 0;
+      for (pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++)
+        if (nrpal < NUM_RPAL) rpal[nrpal++] = code[pc];
       break;
   }
 }
