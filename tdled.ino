@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 120
+#define NUM_LEDS 150
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -20,8 +20,8 @@ void setup() {
   delay(500);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   pal64();
-  Serial.begin(4800);
-  Serial.setTimeout(200);
+  Serial.begin(9600);
+  Serial.setTimeout(250);
 }
 
 void loop() {
@@ -30,6 +30,10 @@ void loop() {
 
   while (pc < NUM_CODE && code[pc]) {
     int c = code[pc];
+    if (Serial.available()) {
+      readcode();
+      return;
+    }
     switch (c) {
       case '!':
         pc++;
@@ -72,13 +76,9 @@ void loop() {
         }
       case ';':
         FastLED.show();
-        FastLED.delay(framedelay);
+        delay(framedelay);
         nleds = 0;
         pc++;
-        if (Serial.available()) {
-          readcode();
-          return;
-        }
         break;
       default:
         if (c >= 0x3f && c <= 0x7f) {
@@ -143,7 +143,7 @@ void readcode() {
   while (Serial.available()) {
     Serial.read();
   }
-  Serial.print(code);
+//  Serial.print(code);
 }
 
 

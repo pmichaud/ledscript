@@ -3,7 +3,7 @@
 ARDUINO=/dev/ttyACM0
 LEDSCRIPT=""
 
-stty -F $ARDUINO cs8 4800 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
+stty -F $ARDUINO cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
 
 case "$1" in
   blk|black)  LEDSCRIPT='@';;
@@ -17,6 +17,7 @@ case "$1" in
   whi3)       LEDSCRIPT='?';;
   yel1)       LEDSCRIPT='T';;
   yel3)       LEDSCRIPT='|';;
+  mag1)       LEDSCRIPT='Q';;
   palette)    LEDSCRIPT='@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?';;
 
   red1wchase) LEDSCRIPT='?P9 !>';;
