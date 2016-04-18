@@ -138,7 +138,7 @@ int scanint(int sc, int val) {
 
 void pal64() {
   // initialize palette with 6-bit color palette
-  int v[4] = { 0x00, 0x55, 0xaa, 0xff };
+  int v[4] = { 0x00, 0x22, 0x77, 0xff };
   int n = 0;
   for (int r = 0; r < 4; r++) {
     for (int g = 0; g < 4; g++) {

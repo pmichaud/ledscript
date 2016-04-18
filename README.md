@@ -16,32 +16,32 @@ Thus the first 32 entries of the default palette are:
 
 ```
    ASCII   R   G   B       Color           ASCII   R   G   B       Color
-     @     00  00  00      Black             P     55  00  00      Red 33%
-     A     00  00  55      Blue 33%          Q     55  00  55      Magenta 33%
-     B     00  00  AA      Blue 66%          R     55  00  AA
-     C     00  00  FF      Blue 100%         S     55  00  FF
-     D     00  55  00      Green 33%         T     55  55  00      Yellow 33%
-     E     00  55  55      Cyan 33%          U     55  55  55      White 33%
-     F     00  55  AA                        V     55  55  AA
-     G     00  55  FF                        W     55  55  FF
-     H     00  AA  00      Green 66%         X     55  AA  00
-     I     00  AA  55                        Y     55  AA  55
-     J     00  AA  AA      Cyan 66%          Z     55  AA  AA
-     K     00  AA  FF                        [     55  AA  FF
-     L     00  FF  00      Green 100%        \     55  FF  00
-     M     00  FF  55                        ]     55  FF  55
-     N     00  FF  AA                        ^     55  FF  AA
-     O     00  FF  FF      Cyan 100%         _     55  FF  FF
+     @     00  00  00      Black             P     22  00  00      Red 33%
+     A     00  00  22      Blue 33%          Q     22  00  22      Magenta 33%
+     B     00  00  77      Blue 66%          R     22  00  77
+     C     00  00  FF      Blue 100%         S     22  00  FF
+     D     00  22  00      Green 33%         T     22  22  00      Yellow 33%
+     E     00  22  22      Cyan 33%          U     22  22  22      White 33%
+     F     00  22  77                        V     22  22  77
+     G     00  22  FF                        W     22  22  FF
+     H     00  77  00      Green 66%         X     22  77  00
+     I     00  77  22                        Y     22  77  22
+     J     00  77  77      Cyan 66%          Z     22  77  77
+     K     00  77  FF                        [     22  77  FF
+     L     00  FF  00      Green 100%        \     22  FF  00
+     M     00  FF  22                        ]     22  FF  22
+     N     00  FF  77                        ^     22  FF  77
+     O     00  FF  FF      Cyan 100%         _     22  FF  FF
 ```
 
 Other notable entries in the default palette:
 
 ```
    ASCII   R   G   B       Color           
-     `     AA  00  00      Red 66%
-     b     AA  00  AA      Magenta 66%
-     h     AA  AA  00      Yellow 66%
-     j     AA  AA  AA      White 66%
+     `     77  00  00      Red 66%
+     b     77  00  77      Magenta 66%
+     h     77  77  00      Yellow 66%
+     j     77  77  77      White 66%
      p     FF  00  00      Red 100%
      s     FF  00  FF      Magenta 100%
      |     FF  FF  00      Yellow 100%
