@@ -6,6 +6,7 @@ LEDSCRIPT=""
 stty -F $ARDUINO cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
 
 case "$1" in
+  ''|raw)     LEDSCRIPT='';;
   blk|black)  LEDSCRIPT='@';;
   red1)       LEDSCRIPT='P';;
   red3)       LEDSCRIPT='p';;
@@ -27,6 +28,8 @@ case "$1" in
   rainbow) LEDSCRIPT='`/8h/8H/8J/8B/8b/8`';;
   rainbowchase) LEDSCRIPT='`/8h/8H/8J/8B/8b/8` !>';;
   longrainbowchase) LEDSCRIPT='`/16h/16H/16J/16B/16b/16` !>';;
+
+  random) LEDSCRIPT='%150';;
 
   *)
     echo "'$1' not recognized"
