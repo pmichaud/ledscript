@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 150
+#define NUM_LEDS 300
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -14,21 +14,42 @@ char rpal[NUM_RPAL] = "@@@?";
 int nrpal = 4;
 
 #define NUM_CODE 256
-char code[NUM_CODE] = "UP9 !< ";
+char code[NUM_CODE] = 
+    "?p5 !> "
+    "\"C "
+    "\"` "
+    "\":%xxxx?!%42;"
+    "\":d500C42;:d100?10C32;C10?10C22;C20?10C12;C30?12;";
 int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
 
+#define NUM_PROG 20
+int prog[NUM_PROG];
+int nprog = 0;
+int cprog = 0;
+
 
 void setup() {
   delay(500);
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812B, DATA_PIN, RGB>(leds, NUM_LEDS);
   pal64();
+  parsecode();
   Serial.begin(9600);
   Serial.setTimeout(250);
 }
 
 void loop() {
+  int aprog = (analogRead(0) * nprog) / 1024;
+  if (aprog != cprog) {
+    cprog = aprog;
+    pcstart = prog[cprog];
+    Serial.print(cprog);  Serial.print(":"); Serial.println(pcstart);
+  }
+  runcode();
+}
+
+void runcode() {
   nleds = 0;
   pc = pcstart;
 
@@ -43,6 +64,8 @@ void loop() {
         pc++;
         pcstart = pc;
         break;
+      case '"':  // progrma boundary
+        return;
       case ':':  // special colon-based command
         pc++;
         coloncmd();
@@ -160,7 +183,17 @@ void readcode() {
   while (Serial.available()) {
     Serial.read();
   }
-//  Serial.print(code);
+}
+
+
+void parsecode() {
+  int n = 0;
+  nprog = 0;
+  prog[nprog++] = n;
+  while (nprog < NUM_PROG && n < NUM_CODE && code[n]) {
+    if (code[n] == '"') prog[nprog++] = n+1;
+    n++;
+  }
 }
 
 

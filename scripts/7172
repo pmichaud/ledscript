@@ -1,0 +1,45 @@
+#!/bin/sh
+
+ARDUINO=/dev/ttyACM0
+LEDSCRIPT=""
+
+stty -F $ARDUINO cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
+
+case "$1" in
+  ''|raw)     LEDSCRIPT='';;
+  blk|black)  LEDSCRIPT='@';;
+  red1)       LEDSCRIPT='P';;
+  red2)       LEDSCRIPT='`';;
+  red3)       LEDSCRIPT='p';;
+  grn1)       LEDSCRIPT='D';;
+  grn3)       LEDSCRIPT='L';;
+  blu1)       LEDSCRIPT='A';;
+  blu2)       LEDSCRIPT='B';;
+  blu3)       LEDSCRIPT='C';;
+  whi1)       LEDSCRIPT='U';;
+  whi3)       LEDSCRIPT='?';;
+  yel1)       LEDSCRIPT='T';;
+  yel3)       LEDSCRIPT='|';;
+  mag1)       LEDSCRIPT='Q';;
+  palette)    LEDSCRIPT='@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?';;
+
+  blu2-7172)  LEDSCRIPT=':d1000B :d250U9B41 B10j8B41 B18j9B41 B28j12B41';;
+  blu3-7172)  LEDSCRIPT=':d1000C :d250?9C41 C10?8C41 C18?9C41 C28?12C41';;
+
+  red1wchase) LEDSCRIPT='?P9 !>';;
+  blu1wchase) LEDSCRIPT='?A9 A?A8 A2?A7 A3?A6 A4?A5 A5?A4 A6?A3 A7?A2 A8?A A9?';;
+  blu3wchase) LEDSCRIPT='?C9 C?C8 C2?C7 C3?C6 C4?C5 C5?C4 C6?C3 C7?C2 C8?C C9?';;
+
+  rainbow) LEDSCRIPT='`/8h/8H/8J/8B/8b/8`';;
+  rainbowchase) LEDSCRIPT='`/8h/8H/8J/8B/8b/8` !>';;
+  longrainbowchase) LEDSCRIPT='`/16h/16H/16J/16B/16b/16` !>';;
+
+  random) LEDSCRIPT='%50';;
+
+  *)
+    echo "'$1' not recognized"
+    exit 1;;
+esac
+
+echo "$2$LEDSCRIPT"
+echo "$2$LEDSCRIPT" >$ARDUINO
