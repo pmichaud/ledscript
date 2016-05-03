@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 300
+#define NUM_LEDS 149
 #define DATA_PIN 4
 
 CRGB palette[64];
@@ -15,11 +15,21 @@ int nrpal = 4;
 
 #define NUM_CODE 256
 char code[NUM_CODE] = 
-    "?p5 !> "
-    "\"C "
-    "\"` "
-    "\":%xxxx?!%42;"
-    "\":d500C42;:d100?10C32;C10?10C22;C20?10C12;C30?12;";
+    "p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
+    "+p "
+    "+?p5 !< "                    // red chase
+    "+C "
+    "+?C5 !< "                    // blue chase
+    "+L "
+    "+?L5 !< "                    // green chase
+    "+? "                         // white
+    "+O "                         // cyan
+    "+s "
+    "+| "
+    "+:%xxxx?!%149;"
+    "+p7?7C7 "
+    "+p7?7C7 !< "
+    ;
 int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
@@ -32,7 +42,7 @@ int cprog = 0;
 
 void setup() {
   delay(500);
-  FastLED.addLeds<WS2812B, DATA_PIN, RGB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   pal64();
   parsecode();
   Serial.begin(9600);
@@ -52,7 +62,6 @@ void loop() {
 void runcode() {
   nleds = 0;
   pc = pcstart;
-
   while (pc < NUM_CODE && code[pc]) {
     int c = code[pc];
     if (Serial.available()) {
@@ -64,7 +73,7 @@ void runcode() {
         pc++;
         pcstart = pc;
         break;
-      case '"':  // progrma boundary
+      case '+':  // progrma boundary
         return;
       case ':':  // special colon-based command
         pc++;
@@ -114,6 +123,8 @@ void runcode() {
         // fall through
       case ';':
         // display without filling
+        
+        FastLED.setBrightness((analogRead(1)*248L)/1024+8);
         FastLED.show();
         delay(framedelay);
         nleds = 0;
@@ -191,7 +202,7 @@ void parsecode() {
   nprog = 0;
   prog[nprog++] = n;
   while (nprog < NUM_PROG && n < NUM_CODE && code[n]) {
-    if (code[n] == '"') prog[nprog++] = n+1;
+    if (code[n] == '+') prog[nprog++] = n+1;
     n++;
   }
 }
