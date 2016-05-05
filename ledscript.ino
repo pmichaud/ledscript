@@ -20,7 +20,7 @@ int ledfill = 0;
 #define PALETTE_NUM 64
 #define RPAL_NUM 64
 CRGB palette[PALETTE_NUM];
-char rpal[RPAL_NUM] = "@@@?";
+char rpalv[RPAL_NUM] = "@@@?";
 int rpaln = 4;
 
 #ifndef CODE_NUM
@@ -31,20 +31,20 @@ int rpaln = 4;
 #endif
 
 char code[CODE_NUM] = 
-    "p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
+    "p/8s/8C/8O/8L/8|/8p !> "     // rainbow chase
     "+p "
-    "+?p5 !> "                    // red chase
+    "+?p6 !> "                    // red chase
     "+C "
-    "+?C5 !> "                    // blue chase
+    "+?C6 !> "                    // blue chase
     "+L "
-    "+?L5 !> "                    // green chase
-    "+? "                         // white
+    "+?L6 !> "                    // green chase
+    "+s "                         // magenta
     "+O "                         // cyan
-    "+s "
-    "+| "
-    /* "+:%xxxx?!%149;"
-    "+p7?7C7 "
-    "+p7?7C7 !< " */
+    "+| "                         // yellow
+    "+? "                         // white
+    "+p7?7C7 "                    // red white blue
+    "+p7?7C7 !> "                 // red white blue chase
+    "+:%xxx?!%500;"                      // random white-on-gold pixels
     ;
 int prog[PROG_NUM];
 int progn = 0;
@@ -59,7 +59,7 @@ int framedelay = 50;
 #define KNOB_NUM 3
 #define KNOB_PROG 0
 #define KNOB_BRIGHT 1
-int knobv[KNOB_NUM] = { 0, 1023, 0 };
+int knobv[KNOB_NUM] = { 0, 512, 0 };
 int knobp = 0;
 
 
@@ -145,6 +145,10 @@ void runCode() {
         pc++; rotateLeft(); break;
       case '>':
         pc++; rotateRight(); break;
+      case '%':
+        pc++; randomPixels(); break;
+      case ':':
+        pc++; colonCommand(); break;
       case ' ':
       case '\n':
         fillFrame();
@@ -164,11 +168,11 @@ void runCode() {
           for (int n = scanint(pc+1, 1); n > 0 && ledn < LED_NUM; n--)
             ledv[ledn++] = color;
         }
+        else pc++;
         break;
     }
   }
 }
-
 
 
 void rampTo() {
@@ -207,12 +211,19 @@ void rotateLeft() {
 
 
 void rotateRight() {
-   int n = ledfill;
-   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
-   CRGB t = ledv[ledn + n - 1];
-   for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
-   ledv[ledn] = t;
-   ledn += n;
+  int n = ledfill;
+  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  CRGB t = ledv[ledn + n - 1];
+  for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
+  ledv[ledn] = t;
+  ledn += n;
+}
+
+
+void randomPixels() {
+  for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
+    ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
+  }
 }
 
 
@@ -269,8 +280,24 @@ void parsecode() {
   }
 }
 
+*/
 
+void colonCommand() {
+  int c = code[pc];
+  switch (c) {
+    case '%': // set random palette
+      rpaln = 0;
+      for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
+        if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
+      }
+      break;
+    default:
+      pc++;
+      break;
+  }
+}
 
+/*
 
 void coloncmd() {
   int brightness;
