@@ -26,39 +26,89 @@ int rpaln = 4;
 #ifndef CODE_NUM
 #define CODE_NUM 256
 #endif
+#ifndef PROG_NUM
+#define PROG_NUM 64
+#endif
 
 char code[CODE_NUM] = 
-    "P6U !> "
-    "+p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
+    "p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
     "+p "
-    "+?p5 !< "                    // red chase
+    "+?p5 !> "                    // red chase
     "+C "
-    "+?C5 !< "                    // blue chase
+    "+?C5 !> "                    // blue chase
     "+L "
-    "+?L5 !< "                    // green chase
+    "+?L5 !> "                    // green chase
     "+? "                         // white
     "+O "                         // cyan
     "+s "
     "+| "
-    "+:%xxxx?!%149;"
+    /* "+:%xxxx?!%149;"
     "+p7?7C7 "
-    "+p7?7C7 !< "
+    "+p7?7C7 !< " */
     ;
+int prog[PROG_NUM];
+int progn = 0;
+int progLast = 0;
+int progNow = 0;
 int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
 
+#define MODE_PIN 2
+#define KNOB_PIN A0
+#define KNOB_NUM 3
+#define KNOB_PROG 0
+#define KNOB_BRIGHT 1
+int knobv[KNOB_NUM] = { 0, 1023, 0 };
+int knobp = 0;
+
 
 void setup() {
   delay(500);
+  pinMode(MODE_PIN, INPUT_PULLUP);
+  pinMode(KNOB_PIN, INPUT_PULLUP);
   Serial.begin(9600);
   Serial.setTimeout(250);
   FastLED.addLeds<WS2812B, LED_PIN, LED_ORDER>(ledv, LED_NUM);
   pal64();
+  parsecode();
 }
 
 void loop() {
-  runcode();
+  knobControl();
+  progControl();
+  runCode();
+  debugDisplay();
+}
+
+
+void knobControl() {
+  static int modeLast = 0;
+  static int knobLast = analogRead(KNOB_PIN);
+  static long debounceNext = 0;
+  int modeNow = digitalRead(MODE_PIN);
+  int knobNow = analogRead(KNOB_PIN);
+  long now = millis();
+  
+  if (modeNow != modeLast && now > debounceNext) {
+    knobp = (knobp + modeNow) % KNOB_NUM;
+    debounceNext = now + 50;
+    modeLast = modeNow;
+    knobLast = knobNow;
+  }
+  if (knobNow < knobLast - 5 || knobNow > knobLast + 5) {
+    knobLast = -1000;
+    knobv[knobp] = knobNow;
+  }
+}
+
+
+void progControl() {
+  progNow = (knobv[KNOB_PROG] * progn) / 1024;
+  if (progNow != progLast) {
+    progLast = progNow;
+    pcstart = prog[progNow];
+  }  
 }
 
 
@@ -77,7 +127,7 @@ int scanint(int sc, int val) {
 }
 
 
-void runcode() {
+void runCode() {
   ledn = 0;
   pc = pcstart;
   while (pc < CODE_NUM && code[pc]) {
@@ -102,6 +152,7 @@ void runcode() {
       case ';':
         // display frame
         pc++;
+        FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
         FastLED.show();
         delay(50);
         ledn = 0;
@@ -122,7 +173,7 @@ void runcode() {
 
 void rampTo() {
   if (ledn > 0) {
-    int n = scanint(pc+1, 1);
+    int n = scanint(pc, 1);
     CRGB from = ledv[ledn - 1];
     CRGB to = (code[pc]) ? palette[code[pc++] & 0x3f] : CRGB::Black;
     int r0 = from.r;  int rd = to.r - r0;
@@ -179,6 +230,33 @@ void pal64() {
 }
 
 
+void debugDisplay() {
+  static long displayNext = 0;
+  long now = millis();
+  if (now > displayNext) {
+    displayNext = now + 1000;
+    Serial.print(knobp);
+    for (int i = 0; i < KNOB_NUM; i++) {
+      Serial.print(' '); Serial.print(knobv[i]);
+    }
+    Serial.print(" progNow=");
+    Serial.println(progNow);
+  }
+}
+
+
+void parsecode() {
+  int n = 0;
+  progn = 0;
+  prog[progn++] = n;
+  while (progn < PROG_NUM && n < CODE_NUM && code[n]) {
+    if (code[n] == '+') prog[progn++] = n+1;
+    n++;
+  }
+}
+
+
+
 /* void readcode() {
   // read a new code string from the serial port
   int n = Serial.readBytes(code, CODE_NUM - 1);
@@ -192,15 +270,6 @@ void pal64() {
 }
 
 
-void parsecode() {
-  int n = 0;
-  nprog = 0;
-  prog[nprog++] = n;
-  while (nprog < NUM_PROG && n < NUM_CODE && code[n]) {
-    if (code[n] == '+') prog[nprog++] = n+1;
-    n++;
-  }
-}
 
 
 void coloncmd() {
