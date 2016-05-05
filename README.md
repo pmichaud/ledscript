@@ -1,10 +1,10 @@
-TDled is a sketch to allow dynamic control of WS2812B LED arrays.  
+LEDscript is a sketch to allow dynamic control of WS2812B LED arrays.  
 
 The sketch reads LED scripts from the serial port and stores 
 them in the code[] array.  Each character of the script represents
 either a LED pixel value or some command to be performed.
 
-TDled has a palette of 64 LED colors available.  In a script, byte
+LEDscript has a palette of 64 LED colors available.  In a script, byte
 values of 0x40 through 0x7f are used to select a color from the
 palette -- these byte values correspond to the ASCII characters '@'
 through DEL.  Since DEL is often difficult to encode in text, the
@@ -88,6 +88,7 @@ A few example scripts are given in the scripts/ directory.
 
 Other character commands are available:
 
+```
   / <n> <color> - ramp to color
     This command ramps <n> pixels from the color of the last pixel set to
     the target <color>.  Thus the sequence "@/15p" draws a black pixel (@)
@@ -123,5 +124,4 @@ Other character commands are available:
     This creates a frame with a repeated pattern of 9 red and one white 
     pixel, then repeats (forever) frames consisting of rotate right 
     operations.
-
-
+```
