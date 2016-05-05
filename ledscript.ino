@@ -1,21 +1,35 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#define NUM_LEDS 149
-#define DATA_PIN 4
 
-CRGB palette[64];
-CRGB leds[NUM_LEDS];
-int nleds = 0;
-int nfill = 0;
+#ifndef LED_PIN
+#define LED_PIN 4
+#endif
+#ifndef LED_ORDER
+#define LED_ORDER GRB
+#endif
 
-#define NUM_RPAL 64
-char rpal[NUM_RPAL] = "@@@?";
-int nrpal = 4;
 
-#define NUM_CODE 256
-char code[NUM_CODE] = 
-    "p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
+#ifndef LED_NUM
+#define LED_NUM 60
+#endif
+CRGB ledv[LED_NUM];
+int ledn = 0;
+int ledfill = 0;
+
+#define PALETTE_NUM 64
+#define RPAL_NUM 64
+CRGB palette[PALETTE_NUM];
+char rpal[RPAL_NUM] = "@@@?";
+int rpaln = 4;
+
+#ifndef CODE_NUM
+#define CODE_NUM 256
+#endif
+
+char code[CODE_NUM] = 
+    "P6U !> "
+    "+p/8s/8C/8O/8L/8|/8p !< "     // rainbow chase
     "+p "
     "+?p5 !< "                    // red chase
     "+C "
@@ -34,130 +48,23 @@ int pc = 0;
 int pcstart = 0;
 int framedelay = 50;
 
-#define NUM_PROG 20
-int prog[NUM_PROG];
-int nprog = 0;
-int cprog = 0;
-
 
 void setup() {
   delay(500);
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  pal64();
-  parsecode();
   Serial.begin(9600);
   Serial.setTimeout(250);
+  FastLED.addLeds<WS2812B, LED_PIN, LED_ORDER>(ledv, LED_NUM);
+  pal64();
 }
 
 void loop() {
-  int aprog = (analogRead(0) * nprog) / 1024;
-  if (aprog != cprog) {
-    cprog = aprog;
-    pcstart = prog[cprog];
-    Serial.print(cprog);  Serial.print(":"); Serial.println(pcstart);
-  }
   runcode();
 }
 
-void runcode() {
-  nleds = 0;
-  pc = pcstart;
-  while (pc < NUM_CODE && code[pc]) {
-    int c = code[pc];
-    if (Serial.available()) {
-      readcode();
-      return;
-    }
-    switch (c) {
-      case '!':  // set new starting point
-        pc++;
-        pcstart = pc;
-        break;
-      case '+':  // progrma boundary
-        return;
-      case ':':  // special colon-based command
-        pc++;
-        coloncmd();
-        break;
-      case '%':  // pick colors from random palette
-        {
-          int n = scanint(pc+1, 1);
-          while (n > 0 && nleds < NUM_LEDS) {
-            leds[nleds++] = palette[rpal[random(nrpal)] & 0x3f];
-            n--;
-          }
-        }
-        break;
-      case '/': if (nleds>0) rampTo(leds[nleds-1]); break;
-      case '<': 
-        {
-          int n = nfill;
-          if (nleds + n > NUM_LEDS) n = NUM_LEDS - nleds;
-          CRGB t = leds[nleds];
-          for (int i = 0; i < n - 1; i++) leds[nleds+i] = leds[nleds+i+1];
-          leds[nleds+n-1] = t;
-          nleds += n;
-          pc++;
-        }
-        break;
-      case '>':
-        {
-          int n = nfill;
-          if (nleds + n > NUM_LEDS) n = NUM_LEDS - nleds;
-          CRGB t = leds[nleds + n - 1];
-          for (int i = n-1; i > 0; i--) leds[nleds+i] = leds[nleds+i-1];
-          leds[nleds] = t;
-          nleds += n;
-          pc++;
-        }
-        break;
-      case ' ':
-      case '\n':
-	// fill and display
-        if (nleds != 0) {
-          nfill = nleds;
-          for (int j = nfill; j < NUM_LEDS; j++) {
-            leds[j] = leds[j - nfill];
-          }
-        }
-        // fall through
-      case ';':
-        // display without filling
-        
-        FastLED.setBrightness((analogRead(1)*248L)/1024+8);
-        FastLED.show();
-        delay(framedelay);
-        nleds = 0;
-        pc++;
-        break;
-      default:
-        // fill a color
-        if (c >= 0x3f && c <= 0x7f) {
-          CRGB color = palette[c & 0x3f];
-          int n = scanint(pc+1, 1);
-          while (n > 0 && nleds < NUM_LEDS) {
-            leds[nleds++] = color;
-            n--;
-          }
-        }
-        break;
-    }
-  }
-}
-
-
-void rampTo(CRGB from) {
-  int n = scanint(pc+1, 1);
-  CRGB to = (code[pc]) ? palette[code[pc++] & 0x3f] : CRGB::Black;
-  int r0 = from.r;  int rd = to.r - r0;
-  int g0 = from.g;  int gd = to.g - g0;
-  int b0 = from.b;  int bd = to.b - b0;
-  for (int i = 1; i <= n && nleds < NUM_LEDS; i++) {
-    leds[nleds++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
-  }
-}
 
 int scanint(int sc, int val) {
+  // scan an integer starting at <sc>, return <val> if no integer found
+  // set <pc> at character following scanned integer
   if (isdigit(code[sc])) {
     val = 0;
     while (code[sc] && isdigit(code[sc])) {
@@ -167,6 +74,94 @@ int scanint(int sc, int val) {
   }
   pc = sc;
   return val;
+}
+
+
+void runcode() {
+  ledn = 0;
+  pc = pcstart;
+  while (pc < CODE_NUM && code[pc]) {
+    int c = code[pc];
+    switch (c) {
+      case '!':  // set new starting point
+        pc++;
+        pcstart = pc;
+        break;
+      case '+':  // program boundary
+        return;
+      case '/': 
+        pc++; rampTo(); break;
+      case '<':
+        pc++; rotateLeft(); break;
+      case '>':
+        pc++; rotateRight(); break;
+      case ' ':
+      case '\n':
+        fillFrame();
+        // fall through
+      case ';':
+        // display frame
+        pc++;
+        FastLED.show();
+        delay(50);
+        ledn = 0;
+        break;
+      default:
+        // fill pixels with a color
+        if (c >= 0x3f && c <= 0x7f) {
+          CRGB color = palette[c & 0x3f];
+          for (int n = scanint(pc+1, 1); n > 0 && ledn < LED_NUM; n--)
+            ledv[ledn++] = color;
+        }
+        break;
+    }
+  }
+}
+
+
+
+void rampTo() {
+  if (ledn > 0) {
+    int n = scanint(pc+1, 1);
+    CRGB from = ledv[ledn - 1];
+    CRGB to = (code[pc]) ? palette[code[pc++] & 0x3f] : CRGB::Black;
+    int r0 = from.r;  int rd = to.r - r0;
+    int g0 = from.g;  int gd = to.g - g0;
+    int b0 = from.b;  int bd = to.b - b0;
+    for (int i = 1; i <= n && ledn < LED_NUM; i++) {
+      ledv[ledn++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
+    }
+  }
+}
+
+
+void fillFrame() {
+  if (ledn != 0) {
+    ledfill = ledn;
+    for (int j = ledfill; j < LED_NUM; j++) {
+      ledv[j] = ledv[j - ledfill];
+    }
+  }
+}
+
+
+void rotateLeft() {
+  int n = ledfill;
+  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  CRGB t = ledv[ledn];
+  for (int i = 0; i < n - 1; i++) ledv[ledn+i] = ledv[ledn+i+1];
+  ledv[ledn+n-1] = t;
+  ledn += n;
+}
+
+
+void rotateRight() {
+   int n = ledfill;
+   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+   CRGB t = ledv[ledn + n - 1];
+   for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
+   ledv[ledn] = t;
+   ledn += n;
 }
 
 
@@ -184,9 +179,9 @@ void pal64() {
 }
 
 
-void readcode() {
+/* void readcode() {
   // read a new code string from the serial port
-  int n = Serial.readBytes(code, NUM_CODE - 1);
+  int n = Serial.readBytes(code, CODE_NUM - 1);
   code[n] = 0;
   pc = 0;
   pcstart = 0;
@@ -226,4 +221,4 @@ void coloncmd() {
       break;
   }
 }
-
+*/
