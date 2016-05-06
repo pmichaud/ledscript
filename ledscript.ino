@@ -1,6 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
+#include "7172.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -30,12 +31,13 @@ int rpaln = 4;
 #define PROG_NUM 64
 #endif
 
+#ifndef LED_CODE
 char code[CODE_NUM] = 
     "p/8s/8C/8O/8L/8|/8p !> "     // rainbow chase
     "+p "
     "+?p6 !> "                    // red chase
     "+C "
-    "+?C6 !> "                    // blue chase
+    "+?C6 !> "                    // blue chasee 
     "+L "
     "+?L6 !> "                    // green chase
     "+s "                         // magenta
@@ -46,13 +48,15 @@ char code[CODE_NUM] =
     "+p7?7C7 !> "                 // red white blue chase
     "+:%xxx?!%500;"                      // random white-on-gold pixels
     ;
+#endif
+
 int prog[PROG_NUM];
 int progn = 0;
 int progLast = 0;
 int progNow = 0;
 int pc = 0;
 int pcstart = 0;
-int framedelay = 50;
+int frameMillis = 100;
 
 #define MODE_PIN 2
 #define KNOB_PIN A0
@@ -108,6 +112,7 @@ void progControl() {
   if (progNow != progLast) {
     progLast = progNow;
     pcstart = prog[progNow];
+    frameMillis = 100;
   }  
 }
 
@@ -158,7 +163,7 @@ void runCode() {
         pc++;
         FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
         FastLED.show();
-        delay(50);
+        delay(frameMillis);
         ledn = 0;
         break;
       default:
@@ -290,6 +295,9 @@ void colonCommand() {
       for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
         if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
       }
+      break;
+    case 'd': // set frame delay
+      frameMillis = scanint(pc+1, 50);
       break;
     default:
       pc++;
