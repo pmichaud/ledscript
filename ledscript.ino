@@ -1,7 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#include "7172.h"
+// #include "7172/7172.h"
+#include "7172/cart.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -44,9 +45,10 @@ char code[CODE_NUM] =
     "+O "                         // cyan
     "+| "                         // yellow
     "+? "                         // white
+    "+@ "                         // black
     "+p7?7C7 "                    // red white blue
     "+p7?7C7 !> "                 // red white blue chase
-    "+:%xxx?!%500;"                      // random white-on-gold pixels
+    "+:%xxx?!%500;"               // random white-on-gold pixels
     ;
 #endif
 
@@ -75,10 +77,11 @@ void setup() {
   Serial.setTimeout(250);
   FastLED.addLeds<WS2812B, LED_PIN, LED_ORDER>(ledv, LED_NUM);
   pal64();
-  parsecode();
+  parseCode();
 }
 
 void loop() {
+  if (Serial.available()) { readCode(); }
   knobControl();
   progControl();
   runCode();
@@ -136,6 +139,7 @@ void runCode() {
   ledn = 0;
   pc = pcstart;
   while (pc < CODE_NUM && code[pc]) {
+    if (Serial.available()) return;
     int c = code[pc];
     switch (c) {
       case '!':  // set new starting point
@@ -150,6 +154,8 @@ void runCode() {
         pc++; rotateLeft(); break;
       case '>':
         pc++; rotateRight(); break;
+      case '=':
+        pc++; copyLast(); break;
       case '%':
         pc++; randomPixels(); break;
       case ':':
@@ -225,9 +231,37 @@ void rotateRight() {
 }
 
 
+void copyLast() {
+  if (ledn <= 0) return;
+  for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
+    ledv[ledn] = ledv[ledn-1];
+    ledn++;
+  }
+}
+
+
 void randomPixels() {
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
     ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
+  }
+}
+
+
+void colonCommand() {
+  int c = code[pc];
+  switch (c) {
+    case '%': // set random palette
+      rpaln = 0;
+      for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
+        if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
+      }
+      break;
+    case 'd': // set frame delay
+      frameMillis = scanint(pc+1, 50);
+      break;
+    default:
+      pc++;
+      break;
   }
 }
 
@@ -261,7 +295,7 @@ void debugDisplay() {
 }
 
 
-void parsecode() {
+void parseCode() {
   int n = 0;
   progn = 0;
   prog[progn++] = n;
@@ -269,60 +303,17 @@ void parsecode() {
     if (code[n] == '+') prog[progn++] = n+1;
     n++;
   }
+  progLast = -1;
 }
 
 
-
-/* void readcode() {
+void readCode() {
   // read a new code string from the serial port
   int n = Serial.readBytes(code, CODE_NUM - 1);
   code[n] = 0;
-  pc = 0;
-  pcstart = 0;
-  framedelay = 100;
   while (Serial.available()) {
     Serial.read();
   }
+  parseCode();
 }
 
-*/
-
-void colonCommand() {
-  int c = code[pc];
-  switch (c) {
-    case '%': // set random palette
-      rpaln = 0;
-      for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
-        if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
-      }
-      break;
-    case 'd': // set frame delay
-      frameMillis = scanint(pc+1, 50);
-      break;
-    default:
-      pc++;
-      break;
-  }
-}
-
-/*
-
-void coloncmd() {
-  int brightness;
-  int c = code[pc];
-  switch (c) {
-    case 'd':
-      framedelay = scanint(pc+1, 100);
-      break;
-    case 'b':
-      brightness = scanint(pc+1, 255);
-      FastLED.setBrightness(brightness);
-      break;
-    case '%':
-      nrpal = 0;
-      for (pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++)
-        if (nrpal < NUM_RPAL) rpal[nrpal++] = code[pc];
-      break;
-  }
-}
-*/
