@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ARDUINO=/dev/ttyACM0
+ARDUINO=${ARDUINO-/dev/ttyACM0}
 LEDSCRIPT=""
 
 stty -F $ARDUINO cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl
