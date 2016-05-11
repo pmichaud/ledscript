@@ -332,7 +332,7 @@ void debugDisplay() {
 
 
 void parseCode() {
-  int n = 0;
+  int n = (code[0] == '+');
   progn = 0;
   prog[progn++] = n;
   while (progn < PROG_NUM && n < CODE_NUM && code[n]) {
