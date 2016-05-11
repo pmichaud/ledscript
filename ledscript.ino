@@ -1,8 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-// #include "7172/7172.h"
-#include "7172/cart.h"
+#include "7172/7172.h"
+// #include "7172/cart.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -24,6 +24,11 @@ int ledfill = 0;
 CRGB palette[PALETTE_NUM];
 char rpalv[RPAL_NUM] = "@@@?";
 int rpaln = 4;
+
+#define RFADE_NUM 50
+char rfadev[RFADE_NUM];
+uint8_t rfadet[RFADE_NUM];
+int rfaden = 0;
 
 #ifndef CODE_NUM
 #define CODE_NUM 256
@@ -73,6 +78,7 @@ void setup() {
   delay(500);
   pinMode(MODE_PIN, INPUT_PULLUP);
   pinMode(KNOB_PIN, INPUT_PULLUP);
+  randomSeed(analogRead(1));
   Serial.begin(9600);
   Serial.setTimeout(250);
   FastLED.addLeds<WS2812B, LED_PIN, LED_ORDER>(ledv, LED_NUM);
@@ -115,7 +121,7 @@ void progControl() {
   if (progNow != progLast) {
     progLast = progNow;
     pcstart = prog[progNow];
-    frameMillis = 100;
+    progStart();
   }  
 }
 
@@ -134,6 +140,17 @@ int scanint(int sc, int val) {
   return val;
 }
 
+
+void progStart() {
+  frameMillis = 100;
+  frameStart();
+}
+
+
+void frameStart() {
+  ledn = 0;
+  rfaden = 0;
+}
 
 void runCode() {
   ledn = 0;
@@ -170,7 +187,7 @@ void runCode() {
         FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
         FastLED.show();
         delay(frameMillis);
-        ledn = 0;
+        frameStart();
         break;
       default:
         // fill pixels with a color
@@ -242,7 +259,16 @@ void copyLast() {
 
 void randomPixels() {
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
-    ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
+    if (rfaden < RFADE_NUM) {
+      if (rfadet[rfaden] < 1) {
+        rfadet[rfaden] = random(16,32);
+        rfadev[rfaden] = rpalv[random8(rpaln)];
+      }
+      nblend(ledv[ledn++], palette[rfadev[rfaden] & 0x3f], 255 / rfadet[rfaden]--);
+      rfaden++;
+    }
+    else 
+      ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
   }
 }
 
@@ -251,9 +277,11 @@ void colonCommand() {
   int c = code[pc];
   switch (c) {
     case '%': // set random palette
-      rpaln = 0;
-      for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
-        if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
+      if (code[pc] >= 0x3f && code[pc] <= 0x7f) {
+        rpaln = 0;
+        for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
+          if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
+        }
       }
       break;
     case 'd': // set frame delay
