@@ -22,12 +22,14 @@ int ledfill = 0;
 #define PALETTE_NUM 64
 #define RPAL_NUM 64
 CRGB palette[PALETTE_NUM];
-char rpalv[RPAL_NUM] = "@@@?";
-int rpaln = 4;
+char rpalv[RPAL_NUM] = "p|LOCs";
+int rpaln = 6;
 
-#define RFADE_NUM 50
+#define RFADE_NUM 60
 char rfadev[RFADE_NUM];
 uint8_t rfadet[RFADE_NUM];
+uint8_t rfadet_min = 16;
+uint8_t rfadet_max = 32;
 int rfaden = 0;
 
 #ifndef CODE_NUM
@@ -143,6 +145,8 @@ int scanint(int sc, int val) {
 
 void progStart() {
   frameMillis = 100;
+  rfadet_min = 16;
+  rfadet_max = 32;
   frameStart();
 }
 
@@ -259,12 +263,12 @@ void copyLast() {
 
 void randomPixels() {
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
-    if (rfaden < RFADE_NUM) {
+    if (rfaden < RFADE_NUM && rfadet_max > 1) {
       if (rfadet[rfaden] < 1) {
-        rfadet[rfaden] = random(16,32);
-        rfadev[rfaden] = rpalv[random8(rpaln)];
+        rfadet[rfaden] = random(rfadet_min,rfadet_max);
+        rfadev[rfaden] = rpalv[random8(rpaln)] & 0x3f;
       }
-      nblend(ledv[ledn++], palette[rfadev[rfaden] & 0x3f], 255 / rfadet[rfaden]--);
+      nblend(ledv[ledn++], palette[rfadev[rfaden]], 255 / rfadet[rfaden]--);
       rfaden++;
     }
     else 
@@ -277,12 +281,16 @@ void colonCommand() {
   int c = code[pc];
   switch (c) {
     case '%': // set random palette
+      pc++;
       if (code[pc] >= 0x3f && code[pc] <= 0x7f) {
-        rpaln = 0;
-        for(pc++; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
+        for(rpaln = 0; code[pc] >= 0x3f && code[pc] <= 0x7f; pc++) {
           if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
         }
       }
+      if (isdigit(code[pc]))
+        rfadet_max = rfadet_min = scanint(pc, 16);
+      if (code[pc] == ',')
+        rfadet_max = scanint(pc+1, rfadet_min * 2);
       break;
     case 'd': // set frame delay
       frameMillis = scanint(pc+1, 50);
