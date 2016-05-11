@@ -9,7 +9,8 @@
 #define LED_CODE
 #define CODE_NUM 256
 char code[CODE_NUM] = 
-    "p/8s/8C/8O/8L/8|/8p !> "     // rainbow chase
+    ":d50!&=9&=9&=9&=11;"
+    "+p/8s/8C/8O/8L/8|/8p !> "     // rainbow chase
     "+p "
     "+?p6 !> "                    // red chase
     "+C "
@@ -24,6 +25,8 @@ char code[CODE_NUM] =
     // "+p7?7C7 "                    // red white blue
     // "+p7?7C7 !> "                 // red white blue chase
     "+:d100:%xxx?!%500;"               // random white-on-gold pixels
+    "+:d10!&=41;"
+    "+:d10!&=9&=9&=9&=11;"
     "+:d800p42;:d200?10p32;p10?10p22;p20?10p12;p30?12;"  // 7-1-7-2 blue
     "+:d800C42;:d200?10C32;C10?10C22;C20?10C12;C30?12;"  // 7-1-7-2 blue
     ;

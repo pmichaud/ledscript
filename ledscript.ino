@@ -1,8 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-// #include "7172/7172.h"
-#include "7172/cart.h"
+#include "7172/7172.h"
+// #include "7172/cart.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -49,6 +49,7 @@ char code[CODE_NUM] =
     "+p7?7C7 "                    // red white blue
     "+p7?7C7 !> "                 // red white blue chase
     "+:%xxx?!%500;"               // random white-on-gold pixels
+    "+:d10!&=149;"
     ;
 #endif
 
@@ -71,6 +72,7 @@ int knobp = 0;
 
 void setup() {
   delay(500);
+  randomSeed(analogRead(1));
   pinMode(MODE_PIN, INPUT_PULLUP);
   pinMode(KNOB_PIN, INPUT_PULLUP);
   Serial.begin(9600);
@@ -158,6 +160,8 @@ void runCode() {
         pc++; copyLast(); break;
       case '%':
         pc++; randomPixels(); break;
+      case '&':
+        pc++; randomWalk(); break;
       case ':':
         pc++; colonCommand(); break;
       case ' ':
@@ -242,7 +246,18 @@ void copyLast() {
 
 void randomPixels() {
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
-    ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
+    ledv[ledn++] = palette[rpalv[random8(rpaln)] & 0x3f];
+  }
+}
+
+
+void randomWalk() {
+  for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
+    CHSV hsv = rgb2hsv_approximate(ledv[ledn]);
+    hsv.hue += random(1,5);
+    hsv.sat = 192; 
+    hsv.val = 255;
+    ledv[ledn++] = hsv;
   }
 }
 
