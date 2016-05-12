@@ -2,7 +2,7 @@
 #include <ctype.h>
 
 // #include "7172/7172.h"
-#include "7172/cart.h"
+// #include "7172/cart.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -10,7 +10,6 @@
 #ifndef LED_ORDER
 #define LED_ORDER GRB
 #endif
-
 
 #ifndef LED_NUM
 #define LED_NUM 60
@@ -41,23 +40,24 @@ int rfaden = 0;
 
 #ifndef LED_CODE
 char code[CODE_NUM] = 
-    "+p/8s/8C/8O/8L/8|/8p !> "       // rainbow chase
-    "+:%p|LOCs!%=600;"               // rainbow fades
-    "+:%p|LOCsj8:d30!%60 "           // rainbow dots
-    "+C "                            // blue
-    "+?C6 !> "                       // blue chase 
-    "+p "                            // red
-    "+?p6 !> "                       // red chase
-    "+L "                            // green
-    "+?L6 !> "                       // green chase
-    "+s "                            // magenta
-    "+O "                            // cyan
-    "+| "                            // yellow
-    "+? "                            // white
+    "+B/5C/5D/8E/8F/8G/8H/8I/8B !> " // rainbow chase
+    "+:%ABCDEFGHI!%=600;"            // raiGnbow fades
+    "+:%ABCDEFGHI8:d30!%60 "         // rainbow dots
+    "+B "                            // red
+    "+AB6 !> "                       // red chase
+    "+G "                            // blue
+    "+AG6 !> "                       // blue chase
+    "+E "                            // green
+    "+AE6 !> "                       // green chase
+    "+C "                            // orange
+    "+D "                            // yellow
+    "+F "                            // aqua
+    "+H "                            // purple
+    "+I "                            // pink
+    "+A "                            // white
     "+@ "                            // black
-    "+p7?7C7 "                       // red white blue
-    "+p7?7C7 !> "                    // red white blue chase
-    "+:%xxx?,0!%500;"                // random white-on-gold pixels
+    "+:%ACCC0!%500;"                 // random white-on-gold pixels
+    "+B6A6G6 !> "                    // red white blue chase
     ;
 #endif
 
@@ -86,7 +86,7 @@ void setup() {
   Serial.begin(9600);
   Serial.setTimeout(250);
   FastLED.addLeds<WS2812B, LED_PIN, LED_ORDER>(ledv, LED_NUM);
-  pal64();
+  palRainbow();
   parseCode();
 }
 
@@ -103,7 +103,7 @@ void knobControl() {
   static int modeLast = 0;
   static int knobLast = analogRead(KNOB_PIN);
   static long debounceNext = 0;
-  int modeNow = digitalRead(MODE_PIN);
+  int modeNow = !digitalRead(MODE_PIN);
   int knobNow = analogRead(KNOB_PIN);
   long now = millis();
   
@@ -297,6 +297,14 @@ void colonCommand() {
     case 'd': // set frame delay
       frameMillis = scanint(pc+1, 50);
       break;
+    case 'p':
+      displayPalette();
+      for (int i = 0; i < PALETTE_NUM && ledn < LED_NUM; i++)
+        ledv[ledn++] = palette[i];
+      break;
+    case '!':
+      delay(scanint(pc+1, 10)*1000);
+      break;
     default:
       pc++;
       break;
@@ -304,18 +312,7 @@ void colonCommand() {
 }
 
 
-void pal64() {
-  // initialize palette with 6-bit color palette
-  int v[4] = { 0x00, 0x22, 0x77, 0xff };
-  int n = 0;
-  for (int r = 0; r < 4; r++) {
-    for (int g = 0; g < 4; g++) {
-      for (int b = 0; b < 4; b++) {
-        palette[n++] = CRGB(v[r], v[g], v[b]);
-      }
-    }
-  }
-}
+
 
 
 void debugDisplay() {
@@ -353,5 +350,52 @@ void readCode() {
     Serial.read();
   }
   parseCode();
+}
+
+
+void palRainbow() {
+  palette[0] = 0;
+  palette[1] = 0xababab;
+  palette[2] = 0x222222;
+  palette[32] = CHSV(0, 0, 51);
+  palette[33] = 0xffffff;
+  for (int i = 0; i < 8; i++) {
+    int hue = i * 32;
+    palette[i+2] = CHSV(hue, 255, 255);
+    palette[i+10] = CHSV(hue, 255, 128);
+    palette[i+18] = CHSV(hue, 255, 51);
+    palette[i+34] = CHSV(hue, 153, 255);
+    palette[i+42] = CHSV(hue, 153, 128);
+  }
+  palette[27] = 0xFF8000;
+  palette[28] = 0xFFFF00;
+  palette[29] = 0x00FFFF;
+  palette[30] = 0x8000FF;
+  palette[31] = 0xFF00FF;
+}
+
+
+void pal64() {
+  // initialize palette with 6-bit color palette
+  int v[4] = { 0x00, 0x22, 0x77, 0xff };
+  int n = 0;
+  for (int r = 0; r < 4; r++) {
+    for (int g = 0; g < 4; g++) {
+      for (int b = 0; b < 4; b++) {
+        palette[n++] = CRGB(v[r], v[g], v[b]);
+      }
+    }
+  }
+}
+
+
+void displayPalette() {
+  // display current palette settings
+  char buf[80];
+  for (int i = 0; i < PALETTE_NUM; i++) {
+    CRGB c = palette[i];
+    sprintf(buf, "%2d %c: %02x%02x%02x", i, i+'@', c.r, c.g, c.b);
+    Serial.println(buf);
+  }
 }
 
