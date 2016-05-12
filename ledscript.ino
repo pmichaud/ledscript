@@ -189,6 +189,7 @@ void runCode() {
         // fall through
       case ';':
         // display frame
+        ledfill = ledn;
         pc++;
         FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
         FastLED.show();
