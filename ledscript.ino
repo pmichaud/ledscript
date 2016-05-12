@@ -1,8 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#include "7172/7172.h"
-// #include "7172/cart.h"
+// #include "7172/7172.h"
+#include "7172/cart.h"
 
 #ifndef LED_PIN
 #define LED_PIN 4
@@ -41,21 +41,23 @@ int rfaden = 0;
 
 #ifndef LED_CODE
 char code[CODE_NUM] = 
-    "p/8s/8C/8O/8L/8|/8p !> "     // rainbow chase
-    "+p "
-    "+?p6 !> "                    // red chase
-    "+C "
-    "+?C6 !> "                    // blue chasee 
-    "+L "
-    "+?L6 !> "                    // green chase
-    "+s "                         // magenta
-    "+O "                         // cyan
-    "+| "                         // yellow
-    "+? "                         // white
-    "+@ "                         // black
-    "+p7?7C7 "                    // red white blue
-    "+p7?7C7 !> "                 // red white blue chase
-    "+:%xxx?!%500;"               // random white-on-gold pixels
+    "+p/8s/8C/8O/8L/8|/8p !> "       // rainbow chase
+    "+:%p|LOCs!%=600;"               // rainbow fades
+    "+:%p|LOCsj8:d30!%60 "           // rainbow dots
+    "+C "                            // blue
+    "+?C6 !> "                       // blue chase 
+    "+p "                            // red
+    "+?p6 !> "                       // red chase
+    "+L "                            // green
+    "+?L6 !> "                       // green chase
+    "+s "                            // magenta
+    "+O "                            // cyan
+    "+| "                            // yellow
+    "+? "                            // white
+    "+@ "                            // black
+    "+p7?7C7 "                       // red white blue
+    "+p7?7C7 !> "                    // red white blue chase
+    "+:%xxx?,0!%500;"                // random white-on-gold pixels
     ;
 #endif
 
