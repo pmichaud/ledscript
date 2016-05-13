@@ -1,8 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-// #include "7172/7172.h"
-#include "7172/cart.h"
+#include "7172/7172.h"
+// #include "7172/cart.h"
 
 #ifndef LED_NUM
 #define LED_NUM 60
@@ -51,7 +51,7 @@ int&    rfadet_max = param[p_rfadet_max];
 char code[CODE_NUM] = 
     "+B/5C/5D/8E/8F/8G/8H/8I/8B !> " // rainbow chase
     "+:%ABCDEFGHI!%=600;"            // rainbow fades
-    "+:%ABCDEFGHI8:d30!%60 "         // rainbow dots
+    "+:%ABCDEFGHI8,:d30!%60 "        // rainbow dots
     "+B "                            // red
     "+AB6 !> "                       // red chase
     "+G "                            // blue
@@ -65,7 +65,7 @@ char code[CODE_NUM] =
     "+I "                            // pink
     "+A "                            // white
     "+@ "                            // black
-    "+:%ACCC0!%500;"                 // random white-on-gold pixels
+    "+:%aCCC0!%500;"                 // random white-on-gold pixels
     "+B6A6G6 !> "                    // red white blue chase
     "+:%ABAG8:q3,5:d30!%60 "              // red white blue white random
     ;
@@ -316,8 +316,11 @@ void colonCommand() {
           if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
         }
       }
-      setParam(p_rfadet_min, scanint(pc, 16), 1, 0, 255);
-      setParam(p_rfadet_max, rfadet_min, 1, 0, 255);
+      rfadet_min = 16; rfadet_max = 32;
+      if (isdigit(code[pc])) {
+        setParam(p_rfadet_min, scanint(pc, 16), 1, 0, 255);
+        setParam(p_rfadet_max, rfadet_min, 1, 0, 255);
+      }
       if (code[pc] == ',')
         setParam(p_rfadet_max, scanint(pc+1, rfadet_min * 2), 1, rfadet_min, 255);
       break;
