@@ -26,8 +26,13 @@ char code[CODE_NUM] =
     "+A "                            // white
     "+@ "                            // black
     "+:%aCCC0!%150;"                 // random white-on-gold pixels
-    "+B6A6G6 !> "                    // red white blue chase
+    "+B8A9G8 !> "                    // red white blue chase
     "+:%ABBBAGGG:q7,9!%60 "              // red white blue white random
     ;
+
+// 150 == (2,3,6,10,15,25,50,75)
+// 149 == (1,149)
+// 148 == (2,4,37,74)
+// 147 == (3,7,21,49)
 
 #endif
