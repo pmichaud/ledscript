@@ -10,8 +10,8 @@
 #define LED_CODE
 char code[CODE_NUM] = 
     "+B/6C/6D/6E/6F/6GG/6H/6I/6B !> " // rainbow chase
-    "+:%ABCDEFGHI!%=600;"            // rainbow fades
-    "+:%ABCDEFGHI8:d30!%60 "         // rainbow dots
+    "+:%ABCDEFGHI!%=150;"            // rainbow fades
+    "+:%ABCDEFGHI8,:d30!%60 "         // rainbow dots
     "+B "                            // red
     "+AB9 !> "                       // red chase
     "+G "                            // blue
@@ -25,7 +25,7 @@ char code[CODE_NUM] =
     "+I "                            // pink
     "+A "                            // white
     "+@ "                            // black
-    "+:%ACCC0!%500;"                 // random white-on-gold pixels
+    "+:%aCCC0!%150;"                 // random white-on-gold pixels
     "+B6A6G6 !> "                    // red white blue chase
     "+:%ABBBAGGG:q7,9!%60 "              // red white blue white random
     ;

@@ -9,25 +9,26 @@
 #define LED_CODE
 #define CODE_NUM 256
 char code[CODE_NUM] = 
-    "+:%p|LOCsj:d150!%=9%=9%=9%=11;"
-    "+:%p|LOCsj8,:d30!%42;"
-    "+p/7|/7L/7O/7C/7s/7p !> "    // rainbow chase
-    "+p "
-    "+?p5 !> "                    // red chase
-    "+C "
-    "+?C5 !> "                    // blue chasee 
-    "+L "
-    "+?L5 !> "                    // green chase
-    "+s "                         // magenta
-    "+O "                         // cyan
-    "+| "                         // yellow
-    "+? "                         // white
-    "+@ "                         // black
-    // "+p7?7C7 "                    // red white blue
-    // "+p7?7C7 !> "                 // red white blue chase
-    "+:d100:%xxx?0!%500;"               // random white-on-gold pixels
-    "+:d800p42;:d200?10p32;p10?10p22;p20?10p12;p30?12;"  // 7-1-7-2 red
-    "+:d800C42;:d200?10C32;C10?10C22;C20?10C12;C30?12;"  // 7-1-7-2 blue
+    "+:%ABCDEFGHI:d150!%=9%=9%=9%=11;"
+    "+:%ABCDEFGHI8,:d30!%42;"
+    "+B "                            // red
+    "+aB6 !> "                       // red chase
+    "+G "                            // blue
+    "+aG6 !> "                       // blue chase
+    "+E "                            // green
+    "+aE6 !> "                       // green chase
+    "+C "                            // orange
+    "+D "                            // yellow
+    "+F "                            // aqua
+    "+H "                            // purple
+    "+I "                            // pink
+    "+A "                            // white
+    "+@ "                            // black
+    "+:%aCCC0!%50;"                 // random white-on-gold pixels
+    //"+B6A6G6 !> "                    // red white blue chase
+    //"+:%ABAG8:q3,5:d30!%60 "              // red white blue white random
+    "+:d800B42;:d200A10B32;B10A10B22;B20A10B12;B30A12;"  // 7-1-7-2 red
+    "+:d800G42;:d200A10G32;G10A10G22;G20A10G12;G30A12;"  // 7-1-7-2 blue
     ;
 
 #endif
