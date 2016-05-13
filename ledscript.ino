@@ -316,10 +316,8 @@ void colonCommand() {
           if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
         }
       }
-      if (isdigit(code[pc])) {
-        setParam(p_rfadet_min, scanint(pc, 16), 1, 0, 255);
-        setParam(p_rfadet_max, rfadet_min, 1, 0, 255);
-      }
+      setParam(p_rfadet_min, scanint(pc, 16), 1, 0, 255);
+      setParam(p_rfadet_max, rfadet_min, 1, 0, 255);
       if (code[pc] == ',')
         setParam(p_rfadet_max, scanint(pc+1, rfadet_min * 2), 1, rfadet_min, 255);
       break;
