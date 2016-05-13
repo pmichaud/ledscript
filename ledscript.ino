@@ -2,46 +2,55 @@
 #include <ctype.h>
 
 // #include "7172/7172.h"
-// #include "7172/cart.h"
+#include "7172/cart.h"
 
+#ifndef LED_NUM
+#define LED_NUM 60
+#endif
 #ifndef LED_PIN
 #define LED_PIN 4
 #endif
 #ifndef LED_ORDER
 #define LED_ORDER GRB
 #endif
-
-#ifndef LED_NUM
-#define LED_NUM 60
-#endif
-CRGB ledv[LED_NUM];
-int ledn = 0;
-int ledfill = 0;
-
+#ifndef PALETTE_NUM
 #define PALETTE_NUM 64
-#define RPAL_NUM 64
-CRGB palette[PALETTE_NUM];
-char rpalv[RPAL_NUM] = "p|LOCs";
-int rpaln = 6;
-
+#endif
+#ifndef RPAL_NUM
+#define RPAL_NUM 32
+#endif
+#ifndef RFADE_NUM
 #define RFADE_NUM 60
-char rfadev[RFADE_NUM];
-uint8_t rfadet[RFADE_NUM];
-uint8_t rfadet_min = 16;
-uint8_t rfadet_max = 32;
-int rfaden = 0;
-
+#endif
 #ifndef CODE_NUM
 #define CODE_NUM 256
 #endif
 #ifndef PROG_NUM
-#define PROG_NUM 64
+#define PROG_NUM 32
 #endif
+
+enum { p_frameMillis, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
+int param[PARAM_NUM];
+int param_g[PARAM_NUM] = { 100, 0, 16, 32 };
+
+CRGB ledv[LED_NUM];
+int  ledn = 0;
+int  ledfill = 0;
+
+CRGB    palette[PALETTE_NUM];
+char    rpalv[RPAL_NUM] = "BCDEFGHI";
+uint8_t rpaln = 8;
+
+uint8_t rfadev[RFADE_NUM];
+uint8_t rfadet[RFADE_NUM];
+int     rfaden = 0;
+int&    rfadet_min = param[p_rfadet_min];
+int&    rfadet_max = param[p_rfadet_max];
 
 #ifndef LED_CODE
 char code[CODE_NUM] = 
     "+B/5C/5D/8E/8F/8G/8H/8I/8B !> " // rainbow chase
-    "+:%ABCDEFGHI!%=600;"            // raiGnbow fades
+    "+:%ABCDEFGHI!%=600;"            // rainbow fades
     "+:%ABCDEFGHI8:d30!%60 "         // rainbow dots
     "+B "                            // red
     "+AB6 !> "                       // red chase
@@ -58,24 +67,26 @@ char code[CODE_NUM] =
     "+@ "                            // black
     "+:%ACCC0!%500;"                 // random white-on-gold pixels
     "+B6A6G6 !> "                    // red white blue chase
+    "+:%ABAG8:q3,5:d30!%60 "              // red white blue white random
     ;
 #endif
 
-int prog[PROG_NUM];
-int progn = 0;
-int progLast = 0;
-int progNow = 0;
-int pc = 0;
-int pcstart = 0;
-int frameMillis = 100;
+
+int     prog[PROG_NUM];
+uint8_t progn = 0;
+uint8_t progLast = 0;
+uint8_t progNow = 0;
+int     pc = 0;
+int     pcstart = 0;
+int&    frameMillis = param[p_frameMillis];
 
 #define MODE_PIN 2
 #define KNOB_PIN A0
 #define KNOB_NUM 3
 #define KNOB_PROG 0
 #define KNOB_BRIGHT 1
-int knobv[KNOB_NUM] = { 0, 512, 0 };
-int knobp = 0;
+int     knobv[KNOB_NUM] = { 0, 512, 0 };
+uint8_t knobp = 0;
 
 
 void setup() {
@@ -100,10 +111,10 @@ void loop() {
 
 
 void knobControl() {
-  static int modeLast = 0;
+  static int modeLast = digitalRead(MODE_PIN);
   static int knobLast = analogRead(KNOB_PIN);
   static long debounceNext = 0;
-  int modeNow = !digitalRead(MODE_PIN);
+  int modeNow = digitalRead(MODE_PIN);
   int knobNow = analogRead(KNOB_PIN);
   long now = millis();
   
@@ -146,9 +157,9 @@ int scanint(int sc, int val) {
 
 
 void progStart() {
-  frameMillis = 100;
-  rfadet_min = 16;
-  rfadet_max = 32;
+  for (int i = 0; i < PARAM_NUM; i++) {
+    param[i] = param_g[i];
+  }
   frameStart();
 }
 
@@ -266,12 +277,17 @@ void copyLast() {
 
 void randomPixels() {
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
-    if (rfaden < RFADE_NUM && rfadet_max > 1) {
+    if (rfaden < RFADE_NUM && rfadet_max > 0) {
+      uint8_t& rv = rfadev[rfaden];
+      uint8_t& rt = rfadet[rfaden];
       if (rfadet[rfaden] < 1) {
-        rfadet[rfaden] = random(rfadet_min,rfadet_max);
-        rfadev[rfaden] = rpalv[random8(rpaln)] & 0x3f;
+        int& rfadeq_min = param[p_rfadeq_min];
+        int& rfadeq_max = param[p_rfadeq_max];
+        rv += random(rfadeq_min, (rfadeq_max == 0 && rfadeq_min == 0) ? rpaln : rfadeq_max + 1);
+        rv %= rpaln;
+        rt = random(rfadet_min, rfadet_max + 1);
       }
-      nblend(ledv[ledn++], palette[rfadev[rfaden]], 255 / rfadet[rfaden]--);
+      nblend(ledv[ledn++], palette[rpalv[rv] & 0x3f], 255 / rt--);
       rfaden++;
     }
     else 
@@ -280,8 +296,18 @@ void randomPixels() {
 }
 
 
+int setParam(int p, int v, int isGlobal = 0, int vmin = -32768, int vmax = 32767) {
+  v = constrain(v, vmin, vmax);
+  if (p >= 0 && p < PARAM_NUM) {
+    param[p] = v;
+    if (isGlobal) param_g[p] = v;
+  }
+  return v;
+}
+
 void colonCommand() {
   int c = code[pc];
+  int v;
   switch (c) {
     case '%': // set random palette
       pc++;
@@ -290,13 +316,20 @@ void colonCommand() {
           if (rpaln < RPAL_NUM) rpalv[rpaln++] = code[pc];
         }
       }
-      if (isdigit(code[pc]))
-        rfadet_max = rfadet_min = scanint(pc, 16);
+      if (isdigit(code[pc])) {
+        setParam(p_rfadet_min, scanint(pc, 16), 1, 0, 255);
+        setParam(p_rfadet_max, rfadet_min, 1, 0, 255);
+      }
       if (code[pc] == ',')
-        rfadet_max = scanint(pc+1, rfadet_min * 2);
+        setParam(p_rfadet_max, scanint(pc+1, rfadet_min * 2), 1, rfadet_min, 255);
+      break;
+    case 'q': // set fade randomizer
+      v = setParam(p_rfadeq_min, scanint(pc+1, 0), isupper(c));
+      if (code[pc] == ',') v = scanint(pc+1, v);
+      setParam(p_rfadeq_max, v, isupper(c));
       break;
     case 'd': // set frame delay
-      frameMillis = scanint(pc+1, 50);
+      setParam(p_frameMillis, scanint(pc+1, 100), isupper(c), 0);
       break;
     case 'p':
       displayPalette();
@@ -315,8 +348,8 @@ void colonCommand() {
 
 
 
-
 void debugDisplay() {
+/* 
   static long displayNext = 0;
   long now = millis();
   if (now > displayNext) {
@@ -328,8 +361,8 @@ void debugDisplay() {
     Serial.print(" progNow=");
     Serial.println(progNow);
   }
+*/
 }
-
 
 void parseCode() {
   int n = (code[0] == '+');
@@ -378,7 +411,7 @@ void palRainbow() {
 
 void pal64() {
   // initialize palette with 6-bit color palette
-  int v[4] = { 0x00, 0x22, 0x77, 0xff };
+  uint8_t v[4] = { 0x00, 0x22, 0x77, 0xff };
   int n = 0;
   for (int r = 0; r < 4; r++) {
     for (int g = 0; g < 4; g++) {
@@ -391,6 +424,7 @@ void pal64() {
 
 
 void displayPalette() {
+/*  
   // display current palette settings
   char buf[80];
   for (int i = 0; i < PALETTE_NUM; i++) {
@@ -398,5 +432,7 @@ void displayPalette() {
     sprintf(buf, "%2d %c: %02x%02x%02x", i, i+'@', c.r, c.g, c.b);
     Serial.println(buf);
   }
+*/
 }
+
 
