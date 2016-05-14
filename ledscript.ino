@@ -25,8 +25,8 @@
 #ifndef CODE_NUM
 #define CODE_NUM 256
 #endif
-#ifndef PROG_NUM
-#define PROG_NUM 32
+#ifndef CLIP_NUM
+#define CLIP_NUM 32
 #endif
 
 enum { p_frameMillis, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
@@ -72,10 +72,10 @@ char code[CODE_NUM] =
 #endif
 
 
-int     prog[PROG_NUM];
-uint8_t progn = 0;
-uint8_t progLast = 0;
-uint8_t progNow = 0;
+int     clip[CLIP_NUM];
+uint8_t clipn = 0;
+uint8_t clipLast = 0;
+uint8_t clipNow = 0;
 int     pc = 0;
 int     pcstart = 0;
 int&    frameMillis = param[p_frameMillis];
@@ -83,7 +83,7 @@ int&    frameMillis = param[p_frameMillis];
 #define MODE_PIN 2
 #define KNOB_PIN A0
 #define KNOB_NUM 3
-#define KNOB_PROG 0
+#define KNOB_CLIP 0
 #define KNOB_BRIGHT 1
 int     knobv[KNOB_NUM] = { 0, 512, 0 };
 uint8_t knobp = 0;
@@ -104,7 +104,7 @@ void setup() {
 void loop() {
   if (Serial.available()) { readCode(); }
   knobControl();
-  progControl();
+  clipControl();
   runCode();
   debugDisplay();
 }
@@ -131,12 +131,12 @@ void knobControl() {
 }
 
 
-void progControl() {
-  progNow = (knobv[KNOB_PROG] * progn) / 1024;
-  if (progNow != progLast) {
-    progLast = progNow;
-    pcstart = prog[progNow];
-    progStart();
+void clipControl() {
+  clipNow = (knobv[KNOB_CLIP] * clipn) / 1024;
+  if (clipNow != clipLast) {
+    clipLast = clipNow;
+    pcstart = clip[clipNow];
+    clipStart();
   }  
 }
 
@@ -156,7 +156,7 @@ int scanint(int sc, int val) {
 }
 
 
-void progStart() {
+void clipStart() {
   for (int i = 0; i < PARAM_NUM; i++) {
     param[i] = param_g[i];
   }
@@ -359,21 +359,21 @@ void debugDisplay() {
     for (int i = 0; i < KNOB_NUM; i++) {
       Serial.print(' '); Serial.print(knobv[i]);
     }
-    Serial.print(" progNow=");
-    Serial.println(progNow);
+    Serial.print(" clipNow=");
+    Serial.println(clipNow);
   }
 */
 }
 
 void parseCode() {
   int n = (code[0] == '+');
-  progn = 0;
-  prog[progn++] = n;
-  while (progn < PROG_NUM && n < CODE_NUM && code[n]) {
-    if (code[n] == '+') prog[progn++] = n+1;
+  clipn = 0;
+  clip[clipn++] = n;
+  while (clipn < CLIP_NUM && n < CODE_NUM && code[n]) {
+    if (code[n] == '+') clip[clipn++] = n+1;
     n++;
   }
-  progLast = -1;
+  clipLast = -1;
 }
 
 
