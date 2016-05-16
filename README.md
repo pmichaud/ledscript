@@ -1,78 +1,92 @@
-LEDscript is a sketch to allow dynamic control of WS2812B LED arrays.  
+LEDscript is a sketch to allow dynamic control of WS2812B LED arrays
+with Arduino-based controllers.
 
-The sketch reads LED scripts from the serial port and stores 
-them in the code[] array.  Each character of the script represents
-either a LED pixel value or some command to be performed.
+The sketch stores "LED scripts" in a character array (these can be
+loaded dynamically via the serial port) and interprets the scripts
+to set the colors of the LED array.  The scripting language is highly
+compact to reduce overall storage requirements.  Indeed, the entire
+sketch is designed to make it possible to have good control of a
+300-element LED strip using an Arduino Uno type controller (with
+only 2K of SRAM).  Larger LED strips or highly complex LED sequences
+may require using an Arduino Mega or device with more SRAM available.
+upgrade to an Arduino Mega.
 
-LEDscript has a palette of 64 LED colors available.  In a script, byte
-values of 0x40 through 0x7f are used to select a color from the
-palette -- these byte values correspond to the ASCII characters '@'
-through DEL.  Since DEL is often difficult to encode in text, the
-byte value 0x3f ('?') is treated as a synonym for 0x7f.
+Each character of a script represents either the color of an LED to
+be set or some command to be performed.  LEDscript starts with a 
+palette of 64 colors, identified by values 0x40 through 0x7f -- these
+correspond to the ASCII characters '@' through DEL.  Since DEL is
+often difficult to encode in a text string, the character '?' (0x3f)
+is a synonym for DEL.
 
-The default palette is initialized with colors having 4 levels of
-red (off/low/med/full), 4 levels of blue, and 4 levels of green.
-Thus the first 32 entries of the default palette are:
+The default palette is initialized with black, white, various 
+brightnesses of rainbow-flavored hues, and a couple of "grays":
 
-```
-   ASCII   R   G   B       Color           ASCII   R   G   B       Color
-     @     00  00  00      Black             P     22  00  00      Red 33%
-     A     00  00  22      Blue 33%          Q     22  00  22      Magenta 33%
-     B     00  00  77      Blue 66%          R     22  00  77
-     C     00  00  FF      Blue 100%         S     22  00  FF
-     D     00  22  00      Green 33%         T     22  22  00      Yellow 33%
-     E     00  22  22      Cyan 33%          U     22  22  22      White 33%
-     F     00  22  77                        V     22  22  77
-     G     00  22  FF                        W     22  22  FF
-     H     00  77  00      Green 66%         X     22  77  00
-     I     00  77  22                        Y     22  77  22
-     J     00  77  77      Cyan 66%          Z     22  77  77
-     K     00  77  FF                        [     22  77  FF
-     L     00  FF  00      Green 100%        \     22  FF  00
-     M     00  FF  22                        ]     22  FF  22
-     N     00  FF  77                        ^     22  FF  77
-     O     00  FF  FF      Cyan 100%         _     22  FF  FF
-```
+                        Medium        Dark       Light    
+  Black    @ 000000                            ` 0b0b0b
+  White    A ababab                            a ffffff
+  Red      B ff0000    J 410000    R 0b0000    b c12828
+  Orange   C ab5500    K 2c1600    S 080400    c 8f5b28
+  Yellow   D abab00    L 2c2c00    T 080800    d 8f8f28
+  Green    E 00ff00    M 004100    U 000b00    e 28c128
+  Aqua     F 00ab55    N 002c16    V 000804    f 288f5b
+  Blue     G 0000ff    O 000041    W 00000b    g 2828c1   
+  Purple   H 5500ab    P 16002c    X 040008    h 5b288f
+  Pink     I ab0055    Q 2c0016    Y 080004    i 8f285b
 
-Other notable entries in the default palette:
+  Bright Orange:  [ ff8000
+  Bright Yellow:  \ ffff00
+  Bright Cyan:    ] 00ffff
+  Bright Purple:  ^ 8000ff
+  Bright Magenta: _ ff00ff
 
-```
-   ASCII   R   G   B       Color           
-     `     77  00  00      Red 66%
-     b     77  00  77      Magenta 66%
-     h     77  77  00      Yellow 66%
-     j     77  77  77      White 66%
-     p     FF  00  00      Red 100%
-     s     FF  00  FF      Magenta 100%
-     |     FF  FF  00      Yellow 100%
-     ?     FF  FF  FF      White 100%
-```
+The first column are standard rainbow colors with full saturation
+and relatively stable luminosity; the "Medium" and "Dark" columns
+have the same hue/saturation but are less luminous.  The "Light"
+column has the colors slightly desaturated (so they appear
+lighter, more pastel-ish).
 
-Thus one can specify the pixels of the LED strip by simply stringing together
-a sequence of pixel colors:
+The "Bright" versions are the same hues but with R-G-B components
+turned up full; thus "Bright Yellow" (0xffff00) is likely to have
+much more luminance than a full "Red" (0xff0000) would have, simply
+because the yellow has light emitting from two diodes instead of one.
 
-     AAA@DD@PPPPP     # 3 blue, 1 black, 2 green, 1 black, 5 red
+One can specify the pixels to be set in a LED strip by simply stringing
+together letters corresponding to pixel colors:
+
+    CCC@HH@BBBBB      # 3 orange, 1 black, 2 purple, 1 black, 5 red
 
 A pixel character can be followed by a number to indicate it should be 
 repeated that many times.  Thus the above line could also be specified as:
 
-     A3@D2@P5         # 3 blue, 1 black, 2 green, 1 black, 5 red
+    C3@H2@B5          # 3 orange, 1 black, 2 purple, 1 black, 5 red
 
-If terminated by a space or a newline, a pixel sequence will
-be used to fill to the end of the LED strip.  To prevent the fill,
-end the sequence with a semicolon.
+If a sequence contains a space or newline, then the most recent
+sequence of pixels will be repeated to fill to the end of the LED
+array.  To suppress any filling from taking place, end the sequence
+with a semicolon.
 
-     A3@D2@P5         # fill strip with this sequence
-     A3@D2@P5;        # fill only first 12 LEDs
+    C3@H2@B5          # repeat sequence throughout LED strip
+    C3@H2@B5;         # set only first 12 LEDs
 
-A strip can animate through a sequence of patterns by separating each
-pattern with a space or newline.  Thus a simple 10-frame chase sequence
-(white pixels chasing through a red background) can be given as:
+A sequence ending with a space, newline, or semicolon is called 
+a "frame".  Specifying a sequence of multiple frames (i.e., pixel
+sequences separated by spaces, newlines, or semicolons) will cause
+each frame to display in succession.  A simple 10-frame chase sequence
+of white pixels chasing through a red background can be given as:
 
-    ?P9 P?P8 P2?P7 P3?P6 P4?P5 P5?P4 P6?P3 P7?P2 P8?P P9?
+    AB9 BAB8 B2AB7 B3AB6 B4AB5 B5AB4 B6AB3 B7AB2 B8AB B9A
 
-Note how the white pixel ('?') is stepped through the background of red
-pixels ('P').
+Note how the white pixel ('A') is successively stepped through a
+group of red pixels ('B') in each frame.
+
+The delay between frames (thus the frame rate) can be set using ":d"
+followed by the number of milliseconds between frames... the default
+is 100 milliseconds.
+
+    # fast chase, delay = 5ms
+    :d5AB9 BAB8 B2AB7 B3AB6 B4AB5 B5AB4 B6AB3 B7AB2 B8AB B9A
+    # slow chase, delay = 1000ms
+    :d1000AB9 BAB8 B2AB7 B3AB6 B4AB5 B5AB4 B6AB3 B7AB2 B8AB B9A
 
 When the sketch is running, it monitors the serial port for a new
 LED script to run.  Once a new LED script is loaded, the sketch immediately
