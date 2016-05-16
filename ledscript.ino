@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#include "7172/7172.h"
+// #include "7172/7172.h"
 // #include "7172/cart.h"
 
 #ifndef LED_NUM
@@ -266,6 +266,22 @@ void rotateRight() {
 }
 
 
+void shiftLeft() {
+  int n = ledfill;
+  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  for (int i = 0; i < n - 1; i++) ledv[ledn+i] = ledv[ledn+i+1];
+  ledn += n;
+}
+
+
+void shiftRight() {
+  int n = ledfill;
+  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
+  ledn += n;
+}
+
+
 void copyLast() {
   if (ledn <= 0) return;
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
@@ -340,13 +356,15 @@ void colonCommand() {
     case '!':
       delay(scanint(pc+1, 10)*1000);
       break;
+    case '<':
+      pc++; shiftLeft(); break;
+    case '>':
+      pc++; shiftRight(); break;
     default:
       pc++;
       break;
   }
 }
-
-
 
 
 void debugDisplay() {
