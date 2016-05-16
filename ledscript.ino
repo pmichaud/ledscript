@@ -48,7 +48,7 @@ int&    rfadet_min = param[p_rfadet_min];
 int&    rfadet_max = param[p_rfadet_max];
 
 #ifndef LED_CODE
-char code[CODE_NUM] = 
+char code[CODE_NUM] =
     "+B/5C/5D/8E/8F/8G/8H/8I/8B !> " // rainbow chase
     "+:%ABCDEFGHI!%=600;"            // rainbow fades
     "+:%ABCDEFGHI8,:d30!%60 "        // rainbow dots
@@ -73,9 +73,11 @@ char code[CODE_NUM] =
 
 
 int     clip[CLIP_NUM];
+int     subclip[8];
 uint8_t clipn = 0;
 uint8_t clipLast = 0;
 uint8_t clipNow = 0;
+uint8_t subclipn = 0;
 int     pc = 0;
 int     pcstart = 0;
 int&    frameMillis = param[p_frameMillis];
@@ -160,6 +162,7 @@ void clipStart() {
   for (int i = 0; i < PARAM_NUM; i++) {
     param[i] = param_g[i];
   }
+  subclipn = 0;
   frameStart();
 }
 
@@ -170,6 +173,7 @@ void frameStart() {
 }
 
 void runCode() {
+  int n;
   ledn = 0;
   pc = pcstart;
   while (pc < CODE_NUM && code[pc]) {
@@ -194,6 +198,25 @@ void runCode() {
         pc++; randomPixels(); break;
       case ':':
         pc++; colonCommand(); break;
+      case '.':
+        n = scanint(pc+1, 1);
+        ledn += n;
+        if (ledn > LED_NUM) ledn = LED_NUM;
+        break;
+      case '(':
+        n = scanint(pc+1, 1);       
+        if (subclipn < 8) {
+          subclip[subclipn++] = pc;
+          subclip[subclipn++] = n-1;
+        }
+        break; 
+      case ')':
+        pc++;
+        if (subclipn > 0) {
+          if (subclip[subclipn-1]-- < 1) subclipn -= 2;
+          else pc = subclip[subclipn-2];
+        }
+        break;
       case ' ':
       case '\n':
         fillFrame();
