@@ -1,8 +1,8 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-// #include "7172/7172.h"
-// #include "7172/cart.h"
+#include "7172/7172.h"
+#include "7172/cart.h"
 
 #ifndef LED_NUM
 #define LED_NUM 60
@@ -29,7 +29,7 @@
 #define CLIP_NUM 32
 #endif
 
-enum { p_frameMillis, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
+enum { p_framemsec, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
 int param[PARAM_NUM];
 int param_g[PARAM_NUM] = { 100, 0, 16, 32 };
 
@@ -80,7 +80,7 @@ uint8_t clipNow = 0;
 uint8_t subclipn = 0;
 int     pc = 0;
 int     pcstart = 0;
-int&    frameMillis = param[p_frameMillis];
+int&    framemsec = param[p_framemsec];
 
 #define MODE_PIN 2
 #define KNOB_PIN A0
@@ -115,14 +115,14 @@ void loop() {
 void knobControl() {
   static int modeLast = digitalRead(MODE_PIN);
   static int knobLast = analogRead(KNOB_PIN);
-  static long debounceNext = 0;
+  static long debounceUntil = 0;
   int modeNow = digitalRead(MODE_PIN);
   int knobNow = analogRead(KNOB_PIN);
   long now = millis();
   
-  if (modeNow != modeLast && now > debounceNext) {
+  if (modeNow != modeLast && now > debounceUntil) {
     knobp = (knobp + modeNow) % KNOB_NUM;
-    debounceNext = now + 50;
+    debounceUntil = now + 50;
     modeLast = modeNow;
     knobLast = knobNow;
   }
@@ -227,8 +227,9 @@ void runCode() {
         pc++;
         FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
         FastLED.show();
-        delay(frameMillis);
+        delay(framemsec);
         frameStart();
+        knobControl();
         break;
       default:
         // fill pixels with a color
@@ -369,7 +370,7 @@ void colonCommand() {
       setParam(p_rfadeq_max, v, isupper(c));
       break;
     case 'd': // set frame delay
-      setParam(p_frameMillis, scanint(pc+1, 100), isupper(c), 0);
+      setParam(p_framemsec, scanint(pc+1, 100), isupper(c), 0);
       break;
     case 'p':
       displayPalette();
