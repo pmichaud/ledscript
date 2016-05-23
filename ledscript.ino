@@ -1,7 +1,7 @@
 #include "FastLED.h"
 #include <ctype.h>
 
-#include "7172/7172.h"
+// #include "7172/7172.h"
 #include "7172/cart.h"
 
 #ifndef LED_NUM
@@ -87,6 +87,7 @@ int&    framemsec = param[p_framemsec];
 #define KNOB_NUM 3
 #define KNOB_CLIP 0
 #define KNOB_BRIGHT 1
+long    knobledUntil = 0;
 int     knobv[KNOB_NUM] = { 0, 512, 0 };
 uint8_t knobp = 0;
 
@@ -122,6 +123,7 @@ void knobControl() {
   
   if (modeNow != modeLast && now > debounceUntil) {
     knobp = (knobp + modeNow) % KNOB_NUM;
+    knobledUntil = now + 1000;
     debounceUntil = now + 50;
     modeLast = modeNow;
     knobLast = knobNow;
@@ -226,7 +228,13 @@ void runCode() {
         ledfill = ledn;
         pc++;
         FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
-        FastLED.show();
+        if (millis() > knobledUntil) FastLED.show();
+        else {
+          CRGB t = ledv[0];
+          ledv[0] = palette[knobp];
+          FastLED.show();
+          ledv[0] = t;
+        }
         delay(framemsec);
         frameStart();
         knobControl();
