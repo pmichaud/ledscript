@@ -27,8 +27,8 @@ char code[CODE_NUM] =
     "+:%aCCC0!%50;"                 // random white-on-gold pixels
     //"+B6A6G6 !> "                    // red white blue chase
     //"+:%ABAG8:q3,5:d30!%60 "              // red white blue white random
-    "+:d800B42;:d200A10B32;B10A10B22;B20A10B12;B30A12;"  // 7-1-7-2 red
-    "+:d800G42;:d200A10G32;G10A10G22;G20A10G12;G30A12;"  // 7-1-7-2 blue
+    "+B42;;;;;;;;A10B32;;B10A10B22;;B20A10B12;;B30A12;;"  // 7-1-7-2 red
+    "+G42;;;;;;;;A10G32;;G10A10G22;;G20A10G12;;G30A12;;"  // 7-1-7-2 red
     ;
 
 #endif
