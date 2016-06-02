@@ -71,25 +71,23 @@ char code[CODE_NUM] =
     ;
 #endif
 
+#define MODE_PIN 2
+#define KNOB_PIN A0
+long    knobledUntil = 0;
+enum    { k_clip, k_bright, k_debug, KNOB_NUM };
+int     knobr[KNOB_NUM] = { 1, 32, 1 };
+int     knobv[KNOB_NUM] = { 0, 16, 0 };
+uint8_t knobp = 0;
 
 int     clip[CLIP_NUM];
 int     subclip[8];
-uint8_t clipn = 0;
+int&    clipn = knobr[k_clip];
 uint8_t clipLast = 0;
 uint8_t clipNow = 0;
 uint8_t subclipn = 0;
 int     pc = 0;
 int     pcstart = 0;
 int&    framemsec = param[p_framemsec];
-
-#define MODE_PIN 2
-#define KNOB_PIN A0
-#define KNOB_NUM 3
-#define KNOB_CLIP 0
-#define KNOB_BRIGHT 1
-long    knobledUntil = 0;
-int     knobv[KNOB_NUM] = { 0, 512, 0 };
-uint8_t knobp = 0;
 
 
 void setup() {
@@ -129,14 +127,14 @@ void knobControl() {
     knobLast = knobNow;
   }
   if (knobNow < knobLast - 5 || knobNow > knobLast + 5) {
-    knobLast = -1000;
-    knobv[knobp] = knobNow;
+    knobv[knobp] = ((long)knobNow * knobr[knobp]) / 1024;
+    knobLast = knobNow;
   }
 }
 
 
 void clipControl() {
-  clipNow = (knobv[KNOB_CLIP] * clipn) / 1024;
+  clipNow = knobv[k_clip];
   if (clipNow != clipLast) {
     clipLast = clipNow;
     pcstart = clip[clipNow];
@@ -227,7 +225,7 @@ void runCode() {
         // display frame
         ledfill = ledn;
         pc++;
-        FastLED.setBrightness(knobv[KNOB_BRIGHT] / 4);
+        FastLED.setBrightness(max((knobv[k_bright] * 256) / knobr[k_bright], 3));
         if (millis() > knobledUntil) FastLED.show();
         else {
           CRGB t = ledv[0];
@@ -236,8 +234,8 @@ void runCode() {
           ledv[0] = t;
         }
         delay(framemsec);
-        frameStart();
         knobControl();
+        frameStart();
         break;
       default:
         // fill pixels with a color
