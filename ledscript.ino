@@ -72,6 +72,7 @@ char code[CODE_NUM] =
 #endif
 
 #define MODE_PIN 2
+#define AUX_PIN 3
 #define KNOB_PIN A0
 long    knobledUntil = 0;
 enum    { k_clip, k_bright, k_debug, KNOB_NUM };
@@ -93,6 +94,7 @@ int&    framemsec = param[p_framemsec];
 void setup() {
   delay(500);
   pinMode(MODE_PIN, INPUT_PULLUP);
+  pinMode(AUX_PIN, INPUT_PULLUP);
   pinMode(KNOB_PIN, INPUT_PULLUP);
   randomSeed(analogRead(1));
   Serial.begin(9600);
@@ -113,9 +115,11 @@ void loop() {
 
 void knobControl() {
   static int modeLast = digitalRead(MODE_PIN);
+  static int auxLast = digitalRead(AUX_PIN);
   static int knobLast = analogRead(KNOB_PIN);
   static long debounceUntil = 0;
   int modeNow = digitalRead(MODE_PIN);
+  int auxNow = digitalRead(AUX_PIN);
   int knobNow = analogRead(KNOB_PIN);
   long now = millis();
   
@@ -125,6 +129,11 @@ void knobControl() {
     debounceUntil = now + 50;
     modeLast = modeNow;
     knobLast = knobNow;
+  }
+  if (auxNow != auxLast && now > debounceUntil) {
+    knobv[knobp] = (knobv[knobp] + auxNow) % knobr[knobp];
+    debounceUntil = now + 50;
+    auxLast = auxNow;
   }
   if (knobNow < knobLast - 5 || knobNow > knobLast + 5) {
     knobv[knobp] = ((long)knobNow * knobr[knobp]) / 1024;
