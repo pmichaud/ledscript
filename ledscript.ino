@@ -76,8 +76,8 @@ char code[CODE_NUM] =
 #define KNOB_PIN A0
 long    knobledUntil = 0;
 enum    { k_clip, k_bright, k_debug, KNOB_NUM };
-int     knobr[KNOB_NUM] = { 1, 32, 1 };
-int     knobv[KNOB_NUM] = { 0, 16, 0 };
+int     knobr[KNOB_NUM] = { 1, 16, 1 };
+int     knobv[KNOB_NUM] = { 0, 8, 0 };
 uint8_t knobp = 0;
 
 int     clip[CLIP_NUM];
@@ -234,7 +234,7 @@ void runCode() {
         // display frame
         ledfill = ledn;
         pc++;
-        FastLED.setBrightness(max((knobv[k_bright] * 256) / knobr[k_bright], 3));
+        FastLED.setBrightness(max(knobv[k_bright] * 17, 3));
         if (millis() > knobledUntil) FastLED.show();
         else {
           CRGB t = ledv[0];
