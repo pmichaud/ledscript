@@ -37,6 +37,7 @@ CRGB  ledv[LED_NUM];
 CRGB* ledf = ledv;
 int   ledn = 0;
 int   ledfill = 0;
+int   ledmax = LED_NUM;
 
 CRGB    palette[PALETTE_NUM];
 char    rpalv[RPAL_NUM] = "BCDEFGHI";
@@ -211,7 +212,7 @@ void runCode() {
       case '.':
         n = scanint(pc+1, 1);
         ledn += n;
-        if (ledn > LED_NUM) ledn = LED_NUM;
+        if (ledn > ledmax) ledn = ledmax;
         break;
       case '(':
         n = scanint(pc+1, 1);       
@@ -251,7 +252,7 @@ void runCode() {
         // fill pixels with a color
         if (c >= 0x3f && c <= 0x7f) {
           CRGB color = palette[c & 0x3f];
-          for (int n = scanint(pc+1, 1); n > 0 && ledn < LED_NUM; n--)
+          for (int n = scanint(pc+1, 1); n > 0 && ledn < ledmax; n--)
             ledf[ledn++] = color;
         }
         else pc++;
@@ -269,7 +270,7 @@ void rampTo() {
     int r0 = from.r;  int rd = to.r - r0;
     int g0 = from.g;  int gd = to.g - g0;
     int b0 = from.b;  int bd = to.b - b0;
-    for (int i = 1; i <= n && ledn < LED_NUM; i++) {
+    for (int i = 1; i <= n && ledn < ledmax; i++) {
       ledf[ledn++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
     }
   }
@@ -279,7 +280,7 @@ void rampTo() {
 void fillFrame() {
   if (ledn != 0) {
     ledfill = ledn;
-    for (int j = ledfill; j < LED_NUM; j++) {
+    for (int j = ledfill; j < ledmax; j++) {
       ledf[j] = ledf[j - ledfill];
     }
   }
@@ -288,7 +289,7 @@ void fillFrame() {
 
 void rotateLeft() {
   int n = ledfill;
-  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  if (ledn + n > ledmax) n = ledmax - ledn;
   CRGB t = ledf[ledn];
   for (int i = 0; i < n - 1; i++) ledf[ledn+i] = ledf[ledn+i+1];
   ledf[ledn+n-1] = t;
@@ -298,7 +299,7 @@ void rotateLeft() {
 
 void rotateRight() {
   int n = ledfill;
-  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  if (ledn + n > ledmax) n = ledmax - ledn;
   CRGB t = ledf[ledn + n - 1];
   for (int i = n-1; i > 0; i--) ledf[ledn+i] = ledf[ledn+i-1];
   ledf[ledn] = t;
@@ -308,7 +309,7 @@ void rotateRight() {
 
 void shiftLeft() {
   int n = ledfill;
-  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  if (ledn + n > ledmax) n = ledmax - ledn;
   for (int i = 0; i < n - 1; i++) ledf[ledn+i] = ledf[ledn+i+1];
   ledn += n;
 }
@@ -316,7 +317,7 @@ void shiftLeft() {
 
 void shiftRight() {
   int n = ledfill;
-  if (ledn + n > LED_NUM) n = LED_NUM - ledn;
+  if (ledn + n > ledmax) n = ledmax - ledn;
   for (int i = n-1; i > 0; i--) ledf[ledn+i] = ledf[ledn+i-1];
   ledn += n;
 }
@@ -324,7 +325,7 @@ void shiftRight() {
 
 void copyLast() {
   if (ledn <= 0) return;
-  for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
+  for (int n = scanint(pc, 1); n > 0 && ledn < ledmax; n--) {
     ledf[ledn] = ledf[ledn-1];
     ledn++;
   }
@@ -332,7 +333,7 @@ void copyLast() {
 
 
 void randomPixels() {
-  for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
+  for (int n = scanint(pc, 1); n > 0 && ledn < ledmax; n--) {
     if (rfaden < RFADE_NUM && rfadet_max > 0) {
       uint8_t& rv = rfadev[rfaden];
       uint8_t& rt = rfadet[rfaden];
@@ -390,7 +391,7 @@ void colonCommand() {
       break;
     case 'p':
       displayPalette();
-      for (int i = 0; i < PALETTE_NUM && ledn < LED_NUM; i++)
+      for (int i = 0; i < PALETTE_NUM && ledn < ledmax; i++)
         ledf[ledn++] = palette[i];
       break;
     case '!':
