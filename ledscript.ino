@@ -2,7 +2,7 @@
 #include <ctype.h>
 
 // #include "7172/7172.h"
-#include "7172/cart.h"
+// #include "7172/cart.h"
 
 #ifndef LED_NUM
 #define LED_NUM 60
@@ -33,9 +33,10 @@ enum { p_framemsec, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfade
 int param[PARAM_NUM];
 int param_g[PARAM_NUM] = { 100, 0, 16, 32 };
 
-CRGB ledv[LED_NUM];
-int  ledn = 0;
-int  ledfill = 0;
+CRGB  ledv[LED_NUM];
+CRGB* ledf = ledv;
+int   ledn = 0;
+int   ledfill = 0;
 
 CRGB    palette[PALETTE_NUM];
 char    rpalv[RPAL_NUM] = "BCDEFGHI";
@@ -77,7 +78,7 @@ char code[CODE_NUM] =
 long    knobledUntil = 0;
 enum    { k_clip, k_bright, k_debug, KNOB_NUM };
 int     knobr[KNOB_NUM] = { 1, 16, 1 };
-int     knobv[KNOB_NUM] = { 0, 8, 0 };
+int     knobv[KNOB_NUM] = { 0, 2, 0 };
 uint8_t knobp = 0;
 
 int     clip[CLIP_NUM];
@@ -237,10 +238,10 @@ void runCode() {
         FastLED.setBrightness(max(knobv[k_bright] * 17, 3));
         if (millis() > knobledUntil) FastLED.show();
         else {
-          CRGB t = ledv[0];
-          ledv[0] = palette[knobp];
+          CRGB t = ledf[0];
+          ledf[0] = palette[knobp];
           FastLED.show();
-          ledv[0] = t;
+          ledf[0] = t;
         }
         delay(framemsec);
         knobControl();
@@ -251,7 +252,7 @@ void runCode() {
         if (c >= 0x3f && c <= 0x7f) {
           CRGB color = palette[c & 0x3f];
           for (int n = scanint(pc+1, 1); n > 0 && ledn < LED_NUM; n--)
-            ledv[ledn++] = color;
+            ledf[ledn++] = color;
         }
         else pc++;
         break;
@@ -263,13 +264,13 @@ void runCode() {
 void rampTo() {
   if (ledn > 0) {
     int n = scanint(pc, 1);
-    CRGB from = ledv[ledn - 1];
+    CRGB from = ledf[ledn - 1];
     CRGB to = (code[pc]) ? palette[code[pc++] & 0x3f] : CRGB::Black;
     int r0 = from.r;  int rd = to.r - r0;
     int g0 = from.g;  int gd = to.g - g0;
     int b0 = from.b;  int bd = to.b - b0;
     for (int i = 1; i <= n && ledn < LED_NUM; i++) {
-      ledv[ledn++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
+      ledf[ledn++] = CRGB(r0+(rd*i)/n, g0+(gd*i)/n, b0+(bd*i)/n); 
     }
   }
 }
@@ -279,7 +280,7 @@ void fillFrame() {
   if (ledn != 0) {
     ledfill = ledn;
     for (int j = ledfill; j < LED_NUM; j++) {
-      ledv[j] = ledv[j - ledfill];
+      ledf[j] = ledf[j - ledfill];
     }
   }
 }
@@ -288,9 +289,9 @@ void fillFrame() {
 void rotateLeft() {
   int n = ledfill;
   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
-  CRGB t = ledv[ledn];
-  for (int i = 0; i < n - 1; i++) ledv[ledn+i] = ledv[ledn+i+1];
-  ledv[ledn+n-1] = t;
+  CRGB t = ledf[ledn];
+  for (int i = 0; i < n - 1; i++) ledf[ledn+i] = ledf[ledn+i+1];
+  ledf[ledn+n-1] = t;
   ledn += n;
 }
 
@@ -298,9 +299,9 @@ void rotateLeft() {
 void rotateRight() {
   int n = ledfill;
   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
-  CRGB t = ledv[ledn + n - 1];
-  for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
-  ledv[ledn] = t;
+  CRGB t = ledf[ledn + n - 1];
+  for (int i = n-1; i > 0; i--) ledf[ledn+i] = ledf[ledn+i-1];
+  ledf[ledn] = t;
   ledn += n;
 }
 
@@ -308,7 +309,7 @@ void rotateRight() {
 void shiftLeft() {
   int n = ledfill;
   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
-  for (int i = 0; i < n - 1; i++) ledv[ledn+i] = ledv[ledn+i+1];
+  for (int i = 0; i < n - 1; i++) ledf[ledn+i] = ledf[ledn+i+1];
   ledn += n;
 }
 
@@ -316,7 +317,7 @@ void shiftLeft() {
 void shiftRight() {
   int n = ledfill;
   if (ledn + n > LED_NUM) n = LED_NUM - ledn;
-  for (int i = n-1; i > 0; i--) ledv[ledn+i] = ledv[ledn+i-1];
+  for (int i = n-1; i > 0; i--) ledf[ledn+i] = ledf[ledn+i-1];
   ledn += n;
 }
 
@@ -324,7 +325,7 @@ void shiftRight() {
 void copyLast() {
   if (ledn <= 0) return;
   for (int n = scanint(pc, 1); n > 0 && ledn < LED_NUM; n--) {
-    ledv[ledn] = ledv[ledn-1];
+    ledf[ledn] = ledf[ledn-1];
     ledn++;
   }
 }
@@ -342,11 +343,11 @@ void randomPixels() {
         rv %= rpaln;
         rt = random(rfadet_min, rfadet_max + 1);
       }
-      nblend(ledv[ledn++], palette[rpalv[rv] & 0x3f], 255 / rt--);
+      nblend(ledf[ledn++], palette[rpalv[rv] & 0x3f], 255 / rt--);
       rfaden++;
     }
     else 
-      ledv[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
+      ledf[ledn++] = palette[rpalv[random(rpaln)] & 0x3f];
   }
 }
 
@@ -390,7 +391,7 @@ void colonCommand() {
     case 'p':
       displayPalette();
       for (int i = 0; i < PALETTE_NUM && ledn < LED_NUM; i++)
-        ledv[ledn++] = palette[i];
+        ledf[ledn++] = palette[i];
       break;
     case '!':
       delay(scanint(pc+1, 10)*1000);
