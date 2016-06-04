@@ -16,25 +16,26 @@
 // #include "7172/7172.h"
 // #include "7172/cart.h"
 
-enum { p_framemsec, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
-int param[PARAM_NUM];
-int param_g[PARAM_NUM] = { 100, 0, 16, 32, 0, 0 };
+enum { p_framemsec, p_palette, p_fsize, p_foffset, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
+int paramc[PARAM_NUM];                     // current clip parameters
+int paramd[PARAM_NUM] =                    // default clip parameters
+    { 100, 0, LED_NUM, 0, 16, 32, 0, 0 };
 
-CRGB  ledv[LED_NUM];                      // vector of led values
-CRGB* ledf = ledv;                        // led drawing frame
-int   ledn = 0;                           // number of drawn leds
-int   ledfill = 0;                        // size of fill repeat pattern
-int   ledmax = LED_NUM;                   // index of maximum led to draw
+CRGB  ledv[LED_NUM];                       // vector of led values
+CRGB* ledf = ledv;                         // start of led drawing frame
+int   ledmax = LED_NUM;                    // end of led drawing frame
+int   ledn = 0;                            // number of leds drawn
+int   ledfill = 0;                         // size of fill repeat pattern
 
-CRGB    palette[PALETTE_NUM];             // color palette
-char    rpalv[RPAL_NUM] = "BCDEFGHI";     // ramp palette
-uint8_t rpaln = 8;                        // number of entries in ramp
+CRGB    palette[PALETTE_NUM];              // color palette
+char    rpalv[RPAL_NUM] = "BCDEFGHI";      // ramp palette
+uint8_t rpaln = 8;                         // number of entries in ramp
 
 uint8_t rfadev[RFADE_NUM];
 uint8_t rfadet[RFADE_NUM];
 int     rfaden = 0;
-int&    rfadet_min = param[p_rfadet_min];
-int&    rfadet_max = param[p_rfadet_max];
+int&    rfadet_min = paramc[p_rfadet_min];
+int&    rfadet_max = paramc[p_rfadet_max];
 
 #ifndef LED_CODE
 char code[CODE_NUM] =
@@ -74,7 +75,7 @@ uint8_t clipNow = 0;
 uint8_t subclipn = 0;
 int     pc = 0;
 int     pcstart = 0;
-int&    framemsec = param[p_framemsec];
+int&    framemsec = paramc[p_framemsec];
 
 
 void setup() {
@@ -155,16 +156,21 @@ int scanint(int sc, int val) {
 
 void clipStart() {
   for (int i = 0; i < PARAM_NUM; i++) {
-    param[i] = param_g[i];
+    paramc[i] = paramd[i];
   }
   subclipn = 0;
   frameStart();
 }
 
-
 void frameStart() {
+  frameSet();
   ledn = 0;
   rfaden = 0;
+}
+
+void frameSet() {
+  ledf = ledv + paramc[p_foffset];
+  ledmax = min(paramc[p_fsize], LED_NUM - paramc[p_foffset]);
 }
 
 void runCode() {
@@ -322,8 +328,8 @@ void randomPixels() {
       uint8_t& rv = rfadev[rfaden];
       uint8_t& rt = rfadet[rfaden];
       if (rfadet[rfaden] < 1) {
-        int& rfadeq_min = param[p_rfadeq_min];
-        int& rfadeq_max = param[p_rfadeq_max];
+        int& rfadeq_min = paramc[p_rfadeq_min];
+        int& rfadeq_max = paramc[p_rfadeq_max];
         rv += random(rfadeq_min, (rfadeq_max == 0 && rfadeq_min == 0) ? rpaln : rfadeq_max + 1);
         rv %= rpaln;
         rt = random(rfadet_min, rfadet_max + 1);
@@ -340,8 +346,8 @@ void randomPixels() {
 int setParam(int p, int v, int isGlobal = 0, int vmin = -32768, int vmax = 32767) {
   v = constrain(v, vmin, vmax);
   if (p >= 0 && p < PARAM_NUM) {
-    param[p] = v;
-    if (isGlobal) param_g[p] = v;
+    paramc[p] = v;
+    if (isGlobal) paramd[p] = v;
   }
   return v;
 }
@@ -372,6 +378,16 @@ void colonCommand() {
       break;
     case 'd': // set frame delay
       setParam(p_framemsec, scanint(pc+1, 100), isupper(c), 0);
+      break;
+    case 'n': // set frame size
+    case 'N':
+      setParam(p_fsize, scanint(pc+1, LED_NUM), isupper(c), 0);
+      frameSet();
+      break;
+    case 'o': // set frame offset
+    case 'O':
+      setParam(p_foffset, scanint(pc+1, LED_NUM), isupper(c), 0);
+      frameSet();
       break;
     case 'p':
       displayPalette();
