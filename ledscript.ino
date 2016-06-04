@@ -1,37 +1,24 @@
 #include "FastLED.h"
 #include <ctype.h>
 
+#define LED_NUM 60
+#define LED_PIN 4
+#define LED_ORDER GRB
+#define PALETTE_NUM 64
+#define RPAL_NUM 32
+#define RFADE_NUM 60
+#define CODE_NUM 256
+#define CLIP_NUM 32
+#define MODE_PIN 2
+#define AUX_PIN 3
+#define KNOB_PIN A0
+
 // #include "7172/7172.h"
 // #include "7172/cart.h"
 
-#ifndef LED_NUM
-#define LED_NUM 60
-#endif
-#ifndef LED_PIN
-#define LED_PIN 4
-#endif
-#ifndef LED_ORDER
-#define LED_ORDER GRB
-#endif
-#ifndef PALETTE_NUM
-#define PALETTE_NUM 64
-#endif
-#ifndef RPAL_NUM
-#define RPAL_NUM 32
-#endif
-#ifndef RFADE_NUM
-#define RFADE_NUM 60
-#endif
-#ifndef CODE_NUM
-#define CODE_NUM 256
-#endif
-#ifndef CLIP_NUM
-#define CLIP_NUM 32
-#endif
-
 enum { p_framemsec, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
 int param[PARAM_NUM];
-int param_g[PARAM_NUM] = { 100, 0, 16, 32 };
+int param_g[PARAM_NUM] = { 100, 0, 16, 32, 0, 0 };
 
 CRGB  ledv[LED_NUM];
 CRGB* ledf = ledv;
@@ -73,9 +60,6 @@ char code[CODE_NUM] =
     ;
 #endif
 
-#define MODE_PIN 2
-#define AUX_PIN 3
-#define KNOB_PIN A0
 long    knobledUntil = 0;
 enum    { k_clip, k_bright, k_debug, KNOB_NUM };
 int     knobr[KNOB_NUM] = { 1, 16, 1 };
