@@ -20,15 +20,15 @@ enum { p_framemsec, p_palette, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfade
 int param[PARAM_NUM];
 int param_g[PARAM_NUM] = { 100, 0, 16, 32, 0, 0 };
 
-CRGB  ledv[LED_NUM];
-CRGB* ledf = ledv;
-int   ledn = 0;
-int   ledfill = 0;
-int   ledmax = LED_NUM;
+CRGB  ledv[LED_NUM];                      // vector of led values
+CRGB* ledf = ledv;                        // led drawing frame
+int   ledn = 0;                           // number of drawn leds
+int   ledfill = 0;                        // size of fill repeat pattern
+int   ledmax = LED_NUM;                   // index of maximum led to draw
 
-CRGB    palette[PALETTE_NUM];
-char    rpalv[RPAL_NUM] = "BCDEFGHI";
-uint8_t rpaln = 8;
+CRGB    palette[PALETTE_NUM];             // color palette
+char    rpalv[RPAL_NUM] = "BCDEFGHI";     // ramp palette
+uint8_t rpaln = 8;                        // number of entries in ramp
 
 uint8_t rfadev[RFADE_NUM];
 uint8_t rfadet[RFADE_NUM];
@@ -56,7 +56,7 @@ char code[CODE_NUM] =
     "+@ "                            // black
     "+:%aCCC0!%500;"                 // random white-on-gold pixels
     "+B6A6G6 !> "                    // red white blue chase
-    "+:%ABAG8:q3,5:d30!%60 "              // red white blue white random
+    "+:%ABAG8:q3,5:d30!%60 "         // red white blue white random
     ;
 #endif
 
