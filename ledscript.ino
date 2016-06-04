@@ -12,6 +12,7 @@
 #define MODE_PIN 2
 #define AUX_PIN 3
 #define KNOB_PIN A0
+#define KNOB_LED 0
 #define SETUP() ;
 
 enum { p_framemsec, p_palette, p_fsize, p_foffset, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
@@ -21,7 +22,7 @@ int paramd[PARAM_NUM] =                    // default clip parameters
 
 // #include "7172/7172.h"
 // #include "7172/cart.h"
-#include "tophat.h"
+#include "7172/tophat.h"
 
 
 CRGB  ledv[LED_NUM];                       // vector of led values
@@ -123,12 +124,14 @@ void knobControl() {
   }
   if (auxNow != auxLast && now > debounceUntil) {
     knobv[knobp] = (knobv[knobp] + auxNow) % knobr[knobp];
+    knobledUntil = now + 1000;
     debounceUntil = now + 50;
     auxLast = auxNow;
   }
-  if (knobNow < knobLast - 5 || knobNow > knobLast + 5) {
+  if (knobNow < knobLast - 8 || knobNow > knobLast + 8) {
     knobv[knobp] = ((long)knobNow * knobr[knobp]) / 1024;
     knobLast = knobNow;
+    knobledUntil = now + 1000;
   }
 }
 
@@ -232,10 +235,10 @@ void runCode() {
         FastLED.setBrightness(max(knobv[k_bright] * 17, 3));
         if (millis() > knobledUntil) FastLED.show();
         else {
-          CRGB t = ledv[0];                    // note ledv[0] not ledf[0]
-          ledv[0] = palette[knobp];
+          CRGB t = ledv[KNOB_LED];                    // note ledv[0] not ledf[0]
+          ledv[KNOB_LED] = palette[knobp];
           FastLED.show();
-          ledv[0] = t;
+          ledv[KNOB_LED] = t;
         }
         delay(framemsec);
         knobControl();
