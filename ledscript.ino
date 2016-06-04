@@ -223,10 +223,10 @@ void runCode() {
         FastLED.setBrightness(max(knobv[k_bright] * 17, 3));
         if (millis() > knobledUntil) FastLED.show();
         else {
-          CRGB t = ledf[0];
-          ledf[0] = palette[knobp];
+          CRGB t = ledv[0];                    // note ledv[0] not ledf[0]
+          ledv[0] = palette[knobp];
           FastLED.show();
-          ledf[0] = t;
+          ledv[0] = t;
         }
         delay(framemsec);
         knobControl();
