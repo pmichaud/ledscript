@@ -219,7 +219,6 @@ void runCode() {
         }
         break;
       case ' ':
-      case '\n':
         fillFrame();
         // fall through
       case ';':
@@ -268,7 +267,7 @@ void rampTo() {
 
 
 void fillFrame() {
-  if (ledn != 0) {
+  if (ledn > 0) {
     ledfill = ledn;
     for (int j = ledfill; j < ledmax; j++) {
       ledf[j] = ledf[j - ledfill];
