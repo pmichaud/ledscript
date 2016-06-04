@@ -64,7 +64,7 @@ char code[CODE_NUM] =
 long    knobledUntil = 0;
 enum    { k_clip, k_bright, k_debug, KNOB_NUM };
 int     knobr[KNOB_NUM] = { 1, 16, 1 };
-int     knobv[KNOB_NUM] = { 0, 2, 0 };
+int     knobv[KNOB_NUM] = { 0, 8, 0 };
 uint8_t knobp = 0;
 
 int     clip[CLIP_NUM];
