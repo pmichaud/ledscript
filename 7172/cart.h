@@ -28,6 +28,8 @@ char code[CODE_NUM] =
     "+:%aCCC0!%150;"                 // random white-on-gold pixels
     "+B8A9G8 !> "                    // red white blue chase
     "+:%ABBBAGGG:q7,9!%60 "              // red white blue white random
+    "+:d10:%@ABCDEFGHI0!%.149;(149:>;)"
+    "+:d10:%@ABCDEFGHI0!a;%a.148;(149:>;)"
     ;
 
 // 150 == (2,3,6,10,15,25,50,75)
