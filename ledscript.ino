@@ -16,14 +16,14 @@
 #define SETUP() ;
 
 enum { p_framemsec, p_palette, p_fsize, p_foffset, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
+
+#include "7172/7172.h"
+// #include "7172/cart.h"
+// #include "7172/tophat.h"
+
 int paramc[PARAM_NUM];                     // current clip parameters
 int paramd[PARAM_NUM] =                    // default clip parameters
     { 100, 0, LED_NUM, 0, 16, 32, 0, 0 };
-
-// #include "7172/7172.h"
-// #include "7172/cart.h"
-#include "7172/tophat.h"
-
 
 CRGB  ledv[LED_NUM];                       // vector of led values
 CRGB* ledf = ledv;                         // start of led drawing frame
