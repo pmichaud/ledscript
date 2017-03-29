@@ -17,9 +17,10 @@
 
 enum { p_framemsec, p_palette, p_fsize, p_foffset, p_rfadet_min, p_rfadet_max, p_rfadeq_min, p_rfadeq_max, PARAM_NUM };
 
-#include "7172/7172.h"
+// #include "7172/7172.h"
 // #include "7172/cart.h"
 // #include "7172/tophat.h"
+#include "7172/canopy.h"
 
 int paramc[PARAM_NUM];                     // current clip parameters
 int paramd[PARAM_NUM] =                    // default clip parameters
